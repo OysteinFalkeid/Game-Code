@@ -1,0 +1,8 @@
+.git
+.venv
+__python__
+.pytest_cache
+.vscode
+setup.py
+
+project/build

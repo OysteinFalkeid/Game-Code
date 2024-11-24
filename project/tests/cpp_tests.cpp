@@ -1,30 +1,23 @@
-#include <iostream>
+#include <gtest/gtest.h>
 #include "my_module.h"
 
+// Test for add function
+TEST(MyModuleTest, TestAdd) {
+    EXPECT_EQ(add(1, 1), 2); 
+    EXPECT_EQ(add(0, 0), 0);
+    EXPECT_EQ(add(-1, 1), 0);
+}
 
-int main() {
-    std::cout << "Running C++ Tests\n";
+// Test for Fibonacci function
+TEST(MyModuleTest, TestFib) {
+    EXPECT_EQ(fib(0), 0);
+    EXPECT_EQ(fib(1), 1);
+    EXPECT_EQ(fib(5), 5);
+    EXPECT_EQ(fib(10), 55);
+}
 
-
-
-    float Test_add = add(1,1);
-    if (Test_add == 3) {
-        std::cout << "Test passed: add(2) == 2\n";
-    } else {
-        std::cout << "Test failed: add(2) != 2\n";
-        return 1; // Non-zero return indicates failure
-    }
-
-    //Check Fibonacci
-    int test_fib = fib(5);
-    if (test_fib == 5) {
-        std::cout << "Test passed: fib(5) == 5\n";
-    } else {
-        std::cout << "Test failed: fib(5) != 5\n";
-        return 1; // Non-zero return indicates failure
-    }
-
-    return 0; // Success
-
-    
+// Main function for Google Test
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

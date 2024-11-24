@@ -1,0 +1,1 @@
+D:\Server\Master\Python\Pygame_skole\.venv\Scripts\python.exe main.py
