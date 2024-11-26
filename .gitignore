@@ -4,5 +4,4 @@ __python__
 __pycache__
 .pytest_cache
 .vscode
-setup.py
 
