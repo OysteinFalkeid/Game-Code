@@ -1,6 +1,7 @@
 .git
 .venv
 __python__
+__pycache__
 .pytest_cache
 .vscode
 setup.py
