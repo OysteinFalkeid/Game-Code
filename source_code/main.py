@@ -40,7 +40,7 @@ def main():
     
     
     #the debugger is an ingame displayer 
-    debug = True
+    debug = False
     
     fps_displayer = interfacec.Text(0,0,width/16, height/16, 'None', colour='white')
 
@@ -67,7 +67,6 @@ def main():
                     
                 elif event.type == custom_event_dict['TEXT_MODE']:
                     game_mode = 'TEXT_MODE'
-                    print('text_mode')
                 
                 elif event.type == custom_event_dict['GAME_MODE']:
                     game_mode = 'GAME_MODE'
