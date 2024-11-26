@@ -78,8 +78,10 @@ def main():
                         game.pause()
                         menue_controller.set_menue('main')
                     elif game_mode == 'TEXT_MODE':
-                        print(event.unicode)
-                        game.eddit_file(event.unicode)
+                        if event.unicode == '':
+                             game.send_key_to_file_wiewer(event)
+                        else:
+                            game.eddit_file(event.unicode)
 
                         
                 elif event.type != pygame.MOUSEMOTION and debug == True:

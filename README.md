@@ -9,3 +9,6 @@ The program is free to use and distribute for educational purpuses.
 
 ## geting started
 In the source_code directory run the main.py file in the your python interpreter. (python 3.12 has been tested)
+
+The easyest metod of downloading the project is to run git clone. otherwise a simple download from GitHub will sufice.
+

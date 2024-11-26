@@ -47,6 +47,11 @@ class Game:
                 file.text_edditer(keystroke)
                 break
     
+    def send_key_to_file_wiewer(self, event):
+        for file in self._file_dict.values():
+            if file.selected:
+                file.handle_key(event)
+    
     def on_mouse_press(self, coordinate):
         for button in self._button_list:
             button.test_button_press(coordinate)
@@ -94,29 +99,37 @@ class File_wiewer:
             self._text_list = list(file.read())
             
         self._text_surface = pygame.Surface((self._width, self._height))
+        self._text_lines: list[str] = []
         self._custom_event_dict = custom_event_dict
+        self._font= pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 20)
+        
+        self._cursor = self._font.render('|', True, 'white')
+        self._cursor_index = 0
+        self._cursor_line = 0
+        self._text_list_index = 0
+        
         
         
     def display(self, surface: pygame.Surface):
-        text_lines = []
+        self._text_lines = []
         text_line = ''
         for text in self._text_list:
             if text == '\n':
-                text_lines.append(text_line)
+                self._text_lines.append(text_line)
                 text_line = ''
             else:
                 text_line += text
-        text_lines.append(text_line)
+        self._text_lines.append(text_line)
         text_line = ''
         pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
-        font= pygame.font.Font(None, 24)
-        text_list: list[pygame.font.Font.render] = [font.render(text, True, 'white') for text in text_lines]
+        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for text in self._text_lines]
         
         for i, text in enumerate(text_list):
             self._text_surface.blit(text, (40, i*18 + 40))
             
         self._button_play.display(self._text_surface)
         self._button_save.display(self._text_surface)
+        self._display_cursor()
         surface.blit(self._text_surface, self._coordinate)
                 
     def test_file_select(self, coordinate):
@@ -133,6 +146,8 @@ class File_wiewer:
         self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
         
     def run_code(self):
+        self.save()
+        
         try:
             with open(self._path, 'r') as file:
                 lines = file.readlines()
@@ -147,5 +162,68 @@ class File_wiewer:
             file.write(''.join(self._text_list))
     
     def text_edditer(self, keystroke: str):
-        self._text_list.append(keystroke)
-        print(self._text_list)
+        if keystroke == '':
+            pass
+        elif keystroke == '\x08':
+            if self._text_list_index:
+                self._text_list.pop(self._text_list_index -1)
+                self._text_list_index -= 1
+                self._cursor_index -= 1 
+        elif keystroke == '\r':
+            self._text_list.insert(self._text_list_index, '\n')
+            self._text_list_index += 1
+            self._cursor_index += 1 
+        else:
+            self._text_list.insert(self._text_list_index, keystroke)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+            print(self._text_list)
+    
+    def handle_key(self, event):
+        if event.key == pygame.K_UP:
+            if self._cursor_line:
+                self._cursor_line -= 1
+                if self._cursor_index < len(self._text_lines[self._cursor_line]):
+                    self._text_list_index -= len(self._text_lines[self._cursor_line]) + 1
+                else:
+                    self._text_list_index -= self._cursor_index + 1
+                if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+                    self._cursor_index = len(self._text_lines[self._cursor_line])
+                
+        elif event.key == pygame.K_RIGHT:
+            if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+                self._cursor_index = len(self._text_lines[self._cursor_line])
+            else:
+                self._cursor_index += 1 
+                self._text_list_index += 1
+                
+        elif event.key == pygame.K_DOWN:
+            self._text_list_index += len(self._text_lines[self._cursor_line]) + 1
+            self._cursor_line += 1
+            if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+                self._text_list_index -= self._cursor_index - len(self._text_lines[self._cursor_line])
+                self._cursor_index = len(self._text_lines[self._cursor_line])
+            
+        elif event.key == pygame.K_LEFT:
+            if self._cursor_index > 0:
+                self._cursor_index -= 1
+                if self._text_list_index > 0:
+                    self._text_list_index -= 1
+        print(self._text_list_index)
+            
+    def _display_cursor(self):
+        
+        self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*18 + 40))
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
