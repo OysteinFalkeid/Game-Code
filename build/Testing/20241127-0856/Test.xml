@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20241127-0856-Experimental"
+	Name="(empty)"
+	Generator="ctest-3.31.0"
+	CompilerName=""
+	CompilerVersion=""
+	OSName="Windows"
+	Hostname="Eystein"
+	OSRelease=" Personal"
+	OSVersion=" (Build 26100)"
+	OSPlatform="AMD64"
+	Is64Bits="1"
+	VendorString="AuthenticAMD"
+	VendorID="Advanced Micro Devices"
+	FamilyID="15"
+	ModelID="0"
+	ModelName="AMD Ryzen 7 5800H with Radeon Graphics         "
+	ProcessorCacheSize="64"
+	NumberOfLogicalCPU="16"
+	NumberOfPhysicalCPU="8"
+	TotalVirtualMemory="34156"
+	TotalPhysicalMemory="32108"
+	LogicalProcessorsPerPhysical="2"
+	ProcessorClockFrequency="3193"
+	>
+	<Testing>
+		<StartDateTime>Nov 27 10:40 W. Europe Standard Time</StartDateTime>
+		<StartTestTime>1732700416</StartTestTime>
+		<TestList/>
+		<EndDateTime>Nov 27 10:40 W. Europe Standard Time</EndDateTime>
+		<EndTestTime>1732700416</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

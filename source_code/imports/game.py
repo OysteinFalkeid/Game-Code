@@ -11,6 +11,7 @@ class Game:
         self._surface = surface
         self._file_dict: dict[Path, File_wiewer] = {}
         
+        self._sprites_group = pygame.sprite.Group()
         
         self._button_new_file = \
             interfacec.Button(
@@ -21,12 +22,15 @@ class Game:
                 "New file",
                 lambda: self._append_file(), 
             )
+        #self._sprites_group.add(self._button_new_file.sprite)
         
         self._button_list: list[interfacec.Button] = [self._button_new_file]
         
         self._custom_event_dict = custom_event_dict
-    
+        
     def render(self):
+        self._sprites_group.update()
+        self._sprites_group.draw(self._surface)
         for button in self._button_list:
             button.display(self._surface)
             
@@ -78,18 +82,25 @@ class File_wiewer:
         self._rectvalue = [0, 0, self._width, self._height]
         self._coordinate = [self._x, self._y]
         
+        self._text_surface = pygame.Surface((self._width, self._height))
+        self._sprites_group = pygame.sprite.Group()
+        self._custom_event_dict = custom_event_dict
+            
         self._button_play = \
             interfacec.Button(
-                0, 0, 80, 40, 
+                0, 0, 60, 30, 
                 "play",
                 lambda: self.run_code(), 
             )
+        #self._sprites_group.add(self._button_play.sprite)
+        
         self._button_save = \
             interfacec.Button(
-                80, 0, 80, 40, 
+                60, 0, 60, 30, 
                 "save",
                 lambda: self.save(), 
             )
+        #self._sprites_group.add(self._button_save.sprite)
         
         self.selected = False
         if not Path.is_file(self._path):
@@ -100,7 +111,6 @@ class File_wiewer:
             
         self._text_surface = pygame.Surface((self._width, self._height))
         self._text_lines: list[str] = []
-        self._custom_event_dict = custom_event_dict
         self._font= pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 20)
         
         self._cursor = self._font.render('|', True, 'white')
@@ -108,9 +118,8 @@ class File_wiewer:
         self._cursor_line = 0
         self._text_list_index = 0
         
-        
-        
     def display(self, surface: pygame.Surface):
+        self._sprites_group.update()
         self._text_lines = []
         text_line = ''
         for text in self._text_list:
@@ -132,6 +141,7 @@ class File_wiewer:
         self._rectvalue[2] = self._width
         self._text_surface = pygame.transform.scale(self._text_surface, (self._width, self._height))
         pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
+        self._sprites_group.draw(self._text_surface)
         
         text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
         line_numbers = [self._font.render(str(i), True, 'white') for i in range(len(self._text_lines))]
@@ -253,7 +263,6 @@ class File_wiewer:
                     self._text_list_index -= 1
             
     def _display_cursor(self):
-        
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
             
@@ -261,8 +270,7 @@ class File_wiewer:
             
             
             
-            
-            
+
             
             
             

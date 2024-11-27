@@ -5,6 +5,8 @@ import imports.interfacec as interfacec
 import traceback
 import imports.game as game_controller
     
+# Define a custom sprite class
+
 
 def main():
     # pygame setup
@@ -34,9 +36,13 @@ def main():
     }
     game_mode = 'GAME_MODE'
     
+    sprites_group = pygame.sprite.Group()
+    
     game = game_controller.Game(screen, width, height, custom_event_dict)
     #the game is activated via the main menue. where it is set to try to render the game
     display_game = False
+    
+   
     
     
     #the debugger is an ingame displayer 
@@ -86,8 +92,9 @@ def main():
                 elif event.type != pygame.MOUSEMOTION and debug == True:
                     print(pygame.event.event_name(event.type))
                     
-                    
+            sprites_group.update()      
             screen.fill(background_base_colour)
+            sprites_group.draw(screen)
             
             
             menue_controller.display()

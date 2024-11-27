@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Server\Master\Python\Pygame_skole\build\CMakeFiles\8f2b01fa80727b0afac793fe67434139\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{881A2DAE-8BC5-3546-A609-0DDAC242FDCB}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

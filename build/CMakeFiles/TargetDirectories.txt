@@ -1,0 +1,7 @@
+D:/Server/Master/Python/Pygame_skole/build/CMakeFiles/RUN_TESTS.dir
+D:/Server/Master/Python/Pygame_skole/build/CMakeFiles/ALL_BUILD.dir
+D:/Server/Master/Python/Pygame_skole/build/CMakeFiles/ZERO_CHECK.dir
+D:/Server/Master/Python/Pygame_skole/build/src/CMakeFiles/my_core.dir
+D:/Server/Master/Python/Pygame_skole/build/src/CMakeFiles/RUN_TESTS.dir
+D:/Server/Master/Python/Pygame_skole/build/python/CMakeFiles/my_python_module.dir
+D:/Server/Master/Python/Pygame_skole/build/python/CMakeFiles/RUN_TESTS.dir
