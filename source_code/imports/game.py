@@ -1,4 +1,6 @@
-import multiprocessing.process
+#import multiprocessing.process
+import multiprocessing
+import multiprocessing.context
 import pygame
 import imports.interfacec as interfacec
 from pathlib import Path
@@ -74,7 +76,10 @@ class Game:
         
     def resume(self):
         self._button_list = [self._button_new_file]
-        
+     
+    def kill(self):
+        for file in self._file_dict.values():
+            file.kill()   
         
 class File_wiewer:
     def __init__(self, name, path, custom_event_dict):
@@ -179,8 +184,8 @@ class File_wiewer:
     def run_code(self):
         self.save()
         
-        code_prosessor = Code_prosessor(self._path, self._custom_event_dict)
-        code_prosessor.start()
+        self._code_prosessor = Code_prosessor(self._path, self._custom_event_dict)
+        self._code_prosessor.start()
     
     def save(self):
         with open(self._path, 'w') as file:
@@ -271,6 +276,8 @@ class File_wiewer:
     def _display_cursor(self):
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
+    def kill(self):
+        self._code_prosessor.kill()
             
   
             
@@ -279,6 +286,9 @@ class Code_prosessor(multiprocessing.Process):
         super(Code_prosessor, self).__init__()
         self._path = path
         self._custom_event_dict = custom_event_dict
+        self._framerate = 60
+        self._steps = 20
+        self._time = self._steps / self._framerate
     
     def run(self):
         try:
@@ -294,10 +304,33 @@ class Code_prosessor(multiprocessing.Process):
                 f'##############################################################################\n'
             )
     
-    def move(self):
-        self._custom_event_dict['MOVE'].set()
-        time.sleep(2)
-        print('end') 
+    def move(self, direction: str):
+        clock = pygame.time.Clock()
+        if direction == 'up':
+            for _ in range(self._steps):
+                self._custom_event_dict['MOVE_UP'].set()
+                clock.tick(self._framerate)
+        elif direction == 'right':
+            for _ in range(self._steps):
+                self._custom_event_dict['MOVE_RIGHT'].set()
+                clock.tick(self._framerate)
+        elif direction == 'down':
+            for _ in range(self._steps):
+                self._custom_event_dict['MOVE_DOWN'].set()
+                clock.tick(self._framerate)
+        elif direction == 'left':
+            for _ in range(self._steps):
+                self._custom_event_dict['MOVE_LEFT'].set()
+                clock.tick(self._framerate)
+    
+    @property
+    def time(self):
+        return self._time
+    
+    @time.setter
+    def time(self, value):
+        self._time = value
+        self._framerate = self._steps / self._time
             
 
             

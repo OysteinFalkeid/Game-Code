@@ -27,7 +27,7 @@ class Text:
         ))
         
     def set_text(self, text):
-        self._text = self._font.render(text, True, self._colour)
+        self._text_surface = self._font.render(text, True, self._colour)
 
 class Button(Text):
     def __init__(self, x, y, width, height, text, function, surface = None, sprites_group: Optional[pygame.sprite.Sprite] = None):

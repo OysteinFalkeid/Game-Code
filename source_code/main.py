@@ -30,14 +30,19 @@ def main():
     PLAY = pygame.event.custom_type()
     TEXT_MODE = pygame.event.custom_type()
     GAME_MODE = pygame.event.custom_type()
-    MOVE = multiprocessing.Event()
-    
+    MOVE_UP = multiprocessing.Event()
+    MOVE_RIGHT = multiprocessing.Event()
+    MOVE_DOWN = multiprocessing.Event()
+    MOVE_LEFT = multiprocessing.Event()
     
     custom_event_dict = {
         'PLAY': PLAY,
         'TEXT_MODE': TEXT_MODE,
         'GAME_MODE': GAME_MODE,
-        'MOVE': MOVE,
+        'MOVE_UP': MOVE_UP,
+        'MOVE_RIGHT': MOVE_RIGHT,
+        'MOVE_DOWN': MOVE_DOWN,
+        'MOVE_LEFT': MOVE_LEFT,
     }
     game_mode = 'GAME_MODE'
     
@@ -47,13 +52,10 @@ def main():
     #the game is activated via the main menue. where it is set to try to render the game
     display_game = False
     
-    player = Player(0,0,100,100)
-    
-   
-    
+    player = Player(500,300,100,100)
     
     #the debugger is an ingame displayer 
-    debug = False
+    debug = True
     
     fps_displayer = interfacec.Text(0,0,width/16, height/16, 'None', colour='white')
 
@@ -83,9 +85,7 @@ def main():
                 
                 elif event.type == custom_event_dict['GAME_MODE']:
                     game_mode = 'GAME_MODE'
-                
-                
-                                    
+                           
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         display_game = False
@@ -101,10 +101,18 @@ def main():
                 elif event.type != pygame.MOUSEMOTION and debug == True:
                     print(pygame.event.event_name(event.type))
             
-            if custom_event_dict['MOVE'].is_set():
-                print('test')
+            if custom_event_dict['MOVE_UP'].is_set():
+                player.move('up')
+                custom_event_dict['MOVE_UP'].clear()
+            elif custom_event_dict['MOVE_RIGHT'].is_set():
+                player.move('right')
+                custom_event_dict['MOVE_RIGHT'].clear()
+            elif custom_event_dict['MOVE_DOWN'].is_set():
                 player.move('down')
-                custom_event_dict['MOVE'].clear()
+                custom_event_dict['MOVE_DOWN'].clear()
+            elif custom_event_dict['MOVE_LEFT'].is_set():
+                player.move('left')
+                custom_event_dict['MOVE_LEFT'].clear()
                     
             sprites_group.update()      
             screen.fill(background_base_colour)
@@ -120,7 +128,8 @@ def main():
                 fps_displayer.set_text(str(round(clock.get_fps(), 2)))
                 fps_displayer.display(screen)
             pygame.display.flip()
-            clock.tick(60)  # limits FPS to 60
+            # currentley the limmiting factor for the annimation speed is the clock function integrated in the Code_prosessor class in game.py
+            clock.tick(1000)  # limits FPS to 1000
             
             
             
@@ -129,8 +138,9 @@ def main():
     except Exception as e:
         print(f'Game crashed {e}\n\n{traceback.format_exc()}')
     finally:
-        print('Exit')
         pygame.quit()
+        game.kill()
+        print('Exit')
 
 class Player:
     def __init__(self, x, y, width, height):
@@ -141,13 +151,13 @@ class Player:
     
     def move(self, direction: str):
         if direction == 'right':
-            self._x += 10
+            self._x += 3
         elif direction == 'left':
-            self._x -= 10
+            self._x -= 3
         elif direction == 'up':
-            self._y -= 10
+            self._y -= 3
         elif direction == 'down':
-            self._y += 10
+            self._y += 3
     
     def display(self, surface):
         pygame.draw.rect(surface, (200, 200, 200), (self._x, self._y, self._width, self._height))   
