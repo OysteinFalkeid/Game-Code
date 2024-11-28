@@ -179,20 +179,8 @@ class File_wiewer:
     def run_code(self):
         self.save()
         
-        move = Move(self._custom_event_dict)
-        
-        try:
-            with open(self._path, 'r') as file:
-                lines = file.read()
-                exec(lines, {'move': move.start})
-        except Exception as e:
-            print(
-                f'##############################################################################\n'
-                f'{e}\n'
-                f'\n'
-                f'{traceback.format_exc()}'
-                f'##############################################################################\n'
-            )
+        code_prosessor = Code_prosessor(self._path, self._custom_event_dict)
+        code_prosessor.start()
     
     def save(self):
         with open(self._path, 'w') as file:
@@ -286,12 +274,27 @@ class File_wiewer:
             
   
             
-class Move(multiprocessing.Process):
-    def __init__(self, custom_event_dict):
-        super(Move, self).__init__()
+class Code_prosessor(multiprocessing.Process):
+    def __init__(self, path, custom_event_dict):
+        super(Code_prosessor, self).__init__()
+        self._path = path
         self._custom_event_dict = custom_event_dict
     
     def run(self):
+        try:
+            with open(self._path, 'r') as file:
+                lines = file.read()
+                exec(lines, {'move': self.move})
+        except Exception as e:
+            print(
+                f'##############################################################################\n'
+                f'{e}\n'
+                f'\n'
+                f'{traceback.format_exc()}'
+                f'##############################################################################\n'
+            )
+    
+    def move(self):
         self._custom_event_dict['MOVE'].set()
         time.sleep(2)
         print('end') 
