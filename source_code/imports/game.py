@@ -1,8 +1,14 @@
+import multiprocessing.process
 import pygame
 import imports.interfacec as interfacec
 from pathlib import Path
 import traceback
 from typing import Optional, Union
+import time
+import multiprocessing
+
+
+
 
 class Game:
     def __init__(self, surface, width = 0, height = 0, custom_event_dict: dict[str, pygame.event.Event] = {}):
@@ -88,7 +94,7 @@ class File_wiewer:
             
         self._button_play = \
             interfacec.Button(
-                0, 0, 60, 30, 
+                0, 0, 64, 32, 
                 "play",
                 lambda: self.run_code(), 
             )
@@ -96,7 +102,7 @@ class File_wiewer:
         
         self._button_save = \
             interfacec.Button(
-                60, 0, 60, 30, 
+                64, 0, 64, 32, 
                 "save",
                 lambda: self.save(), 
             )
@@ -117,6 +123,7 @@ class File_wiewer:
         self._cursor_index = 0
         self._cursor_line = 0
         self._text_list_index = 0
+        
         
     def display(self, surface: pygame.Surface):
         self._sprites_group.update()
@@ -172,10 +179,12 @@ class File_wiewer:
     def run_code(self):
         self.save()
         
+        move = Move(self._custom_event_dict)
+        
         try:
             with open(self._path, 'r') as file:
                 lines = file.read()
-                exec(lines)
+                exec(lines, {'move': move.start})
         except Exception as e:
             print(
                 f'##############################################################################\n'
@@ -242,8 +251,12 @@ class File_wiewer:
                     self._cursor_index = len(self._text_lines[self._cursor_line])
                 
         elif event.key == pygame.K_RIGHT:
-            if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+            if len(self._text_lines[self._cursor_line]) < self._cursor_index:
                 self._cursor_index = len(self._text_lines[self._cursor_line])
+            elif len(self._text_lines[self._cursor_line]) == self._cursor_index:
+                self._cursor_index = 0
+                self._cursor_line += 1
+                self._text_list_index += 1
             else:
                 self._cursor_index += 1 
                 self._text_list_index += 1
@@ -261,14 +274,27 @@ class File_wiewer:
                 self._cursor_index -= 1
                 if self._text_list_index > 0:
                     self._text_list_index -= 1
+            else:
+                if self._cursor_line != 0:
+                    self._cursor_line -= 1
+                    self._cursor_index = len(self._text_lines[self._cursor_line])
+                    self._text_list_index -= 1
             
     def _display_cursor(self):
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
             
+  
             
-            
-            
+class Move(multiprocessing.Process):
+    def __init__(self, custom_event_dict):
+        super(Move, self).__init__()
+        self._custom_event_dict = custom_event_dict
+    
+    def run(self):
+        self._custom_event_dict['MOVE'].set()
+        time.sleep(2)
+        print('end') 
             
 
             

@@ -15,13 +15,13 @@ class Text:
         self._rectvalue = [self._x, self._y, self._width, self._height]
         self._colour = colour
         self._text_str = text
-        self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 32)
+        self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), int(height/2))
         self._text_surface = self._font.render(text, True, self._colour)
         
     def display(self, surface: pygame.Surface):
         surface.blit(self._text_surface, (
-            self._x + self._width/2 - len(self._text_str) / 2 * 18, 
-            self._y + self._height/2 - 16, 
+            self._x + self._width/2 - len(self._text_str) / 2 * int(self._height/4), 
+            self._y + self._height/2 - int(self._height/4), 
             self._width, 
             self._height
         ))

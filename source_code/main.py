@@ -1,9 +1,12 @@
+import multiprocessing.process
 import pygame
 import sys
 import imports.menues as menues
 import imports.interfacec as interfacec
 import traceback
 import imports.game as game_controller
+import multiprocessing
+import time
     
 # Define a custom sprite class
 
@@ -27,12 +30,14 @@ def main():
     PLAY = pygame.event.custom_type()
     TEXT_MODE = pygame.event.custom_type()
     GAME_MODE = pygame.event.custom_type()
+    MOVE = multiprocessing.Event()
     
     
     custom_event_dict = {
         'PLAY': PLAY,
         'TEXT_MODE': TEXT_MODE,
         'GAME_MODE': GAME_MODE,
+        'MOVE': MOVE,
     }
     game_mode = 'GAME_MODE'
     
@@ -41,6 +46,8 @@ def main():
     game = game_controller.Game(screen, width, height, custom_event_dict)
     #the game is activated via the main menue. where it is set to try to render the game
     display_game = False
+    
+    player = Player(0,0,100,100)
     
    
     
@@ -76,6 +83,8 @@ def main():
                 
                 elif event.type == custom_event_dict['GAME_MODE']:
                     game_mode = 'GAME_MODE'
+                
+                
                                     
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
@@ -91,6 +100,11 @@ def main():
                         
                 elif event.type != pygame.MOUSEMOTION and debug == True:
                     print(pygame.event.event_name(event.type))
+            
+            if custom_event_dict['MOVE'].is_set():
+                print('test')
+                player.move('down')
+                custom_event_dict['MOVE'].clear()
                     
             sprites_group.update()      
             screen.fill(background_base_colour)
@@ -99,6 +113,7 @@ def main():
             
             menue_controller.display()
             if display_game:
+                player.display(screen)
                 game.render()
             
             if debug:
@@ -117,5 +132,30 @@ def main():
         print('Exit')
         pygame.quit()
 
+class Player:
+    def __init__(self, x, y, width, height):
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+    
+    def move(self, direction: str):
+        if direction == 'right':
+            self._x += 10
+        elif direction == 'left':
+            self._x -= 10
+        elif direction == 'up':
+            self._y -= 10
+        elif direction == 'down':
+            self._y += 10
+    
+    def display(self, surface):
+        pygame.draw.rect(surface, (200, 200, 200), (self._x, self._y, self._width, self._height))   
+      
+
+
+
+    
 if __name__ == '__main__':
     main()
+    
