@@ -19,7 +19,11 @@ The easyest metod of downloading the project is to run git clone. otherwise a si
 # Move
 
 The move function is implemented but is not adjustable
+1. note the move function is adjustable but parameters ar not definable
+
 Missing implementation of a time variable
+1. time is implemented and adjust stem_disst and number of steps
+
 move must be implemented with a relative diraction and options for x and y spesific movement
 
 # Turn
@@ -35,11 +39,19 @@ define time duration for print
 
 # sprite
 some premade custum paths to images in sprites
-ability to load custum sprites from sprite folder by name
+1. path is sent to main game handler where it is loaded as a sprite
+
+ability to load custum sprites from sprite folder by name 
 sprite should be a list and should be incrementable like the sprite.group class from pygame
+
 the background can be implemented as a sprite.
+1. possible but the user has to create a seperrate file
+
 sprites should be able to be rectangles and circles
+
 sprites should be transformable (resized)
+1. implemented but not adjustable by player.
+
 A true fals value for drawing the sprite
 
 # entity layer list
