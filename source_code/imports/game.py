@@ -10,6 +10,7 @@ from typing import Optional, Union
 import time
 import multiprocessing
 import functools
+import random
 
 
 
@@ -329,10 +330,11 @@ class Code_prosessor(multiprocessing.Process):
         self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
     
     def run(self):
+        self._timer = time.time()
         try:
             with open(self._path, 'r') as file:
                 lines = file.read()
-                exec(lines, {'move': self.move})
+                exec(lines, {'move': self.move, 'wait': self.wait, 'timer': self.timer})
         except Exception as e:
             print(
                 f'##############################################################################\n'
@@ -371,6 +373,27 @@ class Code_prosessor(multiprocessing.Process):
     
     def draw(self):
         self._costume = pygame.transform.scale(pygame.image.load(self._image_path), (100, 100))
+    
+    def wait(self, secounds):
+        time.sleep(secounds)
+    
+    def timer(self, reset = False):
+        if reset:
+            self._timer = time.time()
+        else:
+            return time.time() - self._timer
+    
+    def random(self, min = None, max = None, float_value = False):
+        random_num =  random.random()
+        if min:
+            random_num = random_num + min
+        elif min and max:
+            random_num = random_num*(max-min) + min
+        elif max:
+            random_num = random_num*max
+        if not float_value:
+            random_num = int(random_num)
+        return random_num
     
     @property
     def time(self):

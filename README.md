@@ -72,9 +72,19 @@ This could be implemented with a droppdown menue
 
 # timer
 start timer
+1. timer start uppon prosess start
+
 stopp timer
+1. timer never stoppes because the timer itself is imported from windows
+
 reset timer
+1. By running timer(True) or timer(reset = True) the timer resets
+2. the timer dose not return a value upon reset.
+
 event on timer reaching time
+
+time delay
+1. A simple wait function implemented
 
 # random
 random number generator for float int and other
