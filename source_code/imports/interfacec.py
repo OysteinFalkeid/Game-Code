@@ -18,7 +18,7 @@ class Text:
         self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), int(height/2))
         self._text_surface = self._font.render(text, True, self._colour)
         
-    def display(self, surface: pygame.Surface):
+    def draw(self, surface: pygame.Surface):
         surface.blit(self._text_surface, (
             self._x + self._width/2 - len(self._text_str) / 2 * int(self._height/4), 
             self._y + self._height/2 - int(self._height/4), 
@@ -30,13 +30,12 @@ class Text:
         self._text_surface = self._font.render(text, True, self._colour)
 
 class Button(Text):
-    def __init__(self, x, y, width, height, text, function, surface = None, sprites_group: Optional[pygame.sprite.Sprite] = None):
+    def __init__(self, x, y, width, height, text, function, surface = None):
         super().__init__(x, y, width, height, text)
         self._function = function
         self._surface = surface
         
         self._button_surface = pygame.Surface((self._width, self._height))
-        self._sprites_group = sprites_group
         path = Path(__file__).parent / Path('sprites') / Path('New Piskel (1).png')
         self._upper_left = Sprite(path, 
                                   (x,y), 
@@ -92,10 +91,10 @@ class Button(Text):
             self._function()
             
     
-    def display(self, surface: pygame.Surface):
+    def draw(self, surface: pygame.Surface):
         #pygame.draw.rect(surface, (170,170,170), self._rectvalue)
         surface.blit(self._button_surface, (self._x, self._y))
-        super().display(surface)
+        super().draw(surface)
     
     @property
     def sprite(self):

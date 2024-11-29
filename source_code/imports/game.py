@@ -1,6 +1,7 @@
 #import multiprocessing.process
 import multiprocessing
 import multiprocessing.context
+import multiprocessing.queues
 import pygame
 import imports.interfacec as interfacec
 from pathlib import Path
@@ -8,18 +9,17 @@ import traceback
 from typing import Optional, Union
 import time
 import multiprocessing
+import functools
 
 
 
 
 class Game:
-    def __init__(self, surface, width = 0, height = 0, custom_event_dict: dict[str, pygame.event.Event] = {}):
+    def __init__(self, surface: pygame.Surface, width = 0, height = 0, custom_event_dict: dict[str, pygame.event.Event] = {}):
         self._width = width
         self._height = height
         self._surface = surface
         self._file_dict: dict[Path, File_wiewer] = {}
-        
-        self._sprites_group = pygame.sprite.Group()
         
         self._button_new_file = \
             interfacec.Button(
@@ -30,28 +30,41 @@ class Game:
                 "New file",
                 lambda: self._append_file(), 
             )
-        #self._sprites_group.add(self._button_new_file.sprite)
         
         self._button_list: list[interfacec.Button] = [self._button_new_file]
         
         self._custom_event_dict = custom_event_dict
         
-    def render(self):
-        self._sprites_group.update()
-        self._sprites_group.draw(self._surface)
+        self._multiprocessing_draw_queue = multiprocessing.Queue(128)
+        self._multiprocessing_draw_dict = {}
+        
+    def draw(self):
+        
         for button in self._button_list:
-            button.display(self._surface)
+            button.draw(self._surface)
             
         for file in self._file_dict.values():
-            file.display(self._surface)
-    
+            file.draw(self._surface)
+            
+        
+        while not self._multiprocessing_draw_queue.empty():
+            self._multiprocessing_draw_queue_handler(self._multiprocessing_draw_queue.get())
+        
+        for values in self._multiprocessing_draw_dict.values():
+            image = self.load_image(values[0])
+            surface = pygame.transform.scale(image, (values[3], values[4]))
+            self._surface.blit(surface, (values[1], values[2]))
+            
+    def _multiprocessing_draw_queue_handler(self, values: tuple):
+        self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5])
+        
     def _append_file(self):
         file_name = f'code_file_{len(self._file_dict)}'
         path = Path(__file__).parent.parent \
             / Path('save') / Path('save_1') \
             / Path(file_name + '.py')
             
-        self._file_dict[file_name] = File_wiewer(file_name, path, self._custom_event_dict)
+        self._file_dict[file_name] = File_wiewer(file_name, path, self._custom_event_dict, self._multiprocessing_draw_queue)
     
     def eddit_file(self, keystroke: str):
         for file in self._file_dict.values():
@@ -76,6 +89,10 @@ class Game:
             if file.movable:
                 file.move_text_edditer(rel_coordinate)
     
+    @functools.lru_cache(maxsize=128)
+    def load_image(self, path):
+        return pygame.image.load(path)
+    
     def pause(self):
         self._button_list = []
         
@@ -87,7 +104,7 @@ class Game:
             file.kill()   
         
 class File_wiewer:
-    def __init__(self, name, path, custom_event_dict):
+    def __init__(self, name, path, custom_event_dict, multiprocessing_draw_queue):
         self._path = path
         self._name = name
         
@@ -99,16 +116,15 @@ class File_wiewer:
         self._coordinate = (self._x, self._y)
         
         self._text_surface = pygame.Surface((self._width, self._height))
-        self._sprites_group = pygame.sprite.Group()
         self._custom_event_dict = custom_event_dict
-            
+        self._code_prosessor = Code_prosessor(self._name, self._path, self._custom_event_dict, multiprocessing_draw_queue)
+        
         self._button_play = \
             interfacec.Button(
                 0, 0, 64, 32, 
                 "play",
                 lambda: self.run_code(), 
             )
-        #self._sprites_group.add(self._button_play.sprite)
         
         self._button_save = \
             interfacec.Button(
@@ -116,7 +132,6 @@ class File_wiewer:
                 "save",
                 lambda: self.save(), 
             )
-        #self._sprites_group.add(self._button_save.sprite)
         
         self.selected = False
         self.movable = False
@@ -135,8 +150,7 @@ class File_wiewer:
         self._cursor_line = 0
         self._text_list_index = 0
         
-    def display(self, surface: pygame.Surface):
-        self._sprites_group.update()
+    def draw(self, surface: pygame.Surface):
         self._text_lines = []
         text_line = ''
         for text in self._text_list:
@@ -160,8 +174,6 @@ class File_wiewer:
         pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
         pygame.draw.rect(self._text_surface, (30-15, 63-15, 90-15), (0, 0, self._width, 32))
         
-        self._sprites_group.draw(self._text_surface)
-        
         self._text_surface.blit(self._font.render(self._name, True, 'white'), (130, 7))
         
         text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
@@ -173,9 +185,9 @@ class File_wiewer:
         for i, number in enumerate(line_numbers):
             self._text_surface.blit(number, (0, i*20 + 40))
             
-        self._button_play.display(self._text_surface)
-        self._button_save.display(self._text_surface)
-        self._display_cursor()
+        self._button_play.draw(self._text_surface)
+        self._button_save.draw(self._text_surface)
+        self._draw_cursor()
         surface.blit(self._text_surface, self._coordinate)
                 
     def test_file_select(self, coordinate):
@@ -195,9 +207,8 @@ class File_wiewer:
         
     def run_code(self):
         self.save()
-        
-        self._code_prosessor = Code_prosessor(self._path, self._custom_event_dict)
-        self._code_prosessor.start()
+        if not self._code_prosessor.is_alive():
+            self._code_prosessor.start()
     
     def save(self):
         with open(self._path, 'w') as file:
@@ -289,23 +300,33 @@ class File_wiewer:
                     self._cursor_index = len(self._text_lines[self._cursor_line])
                     self._text_list_index -= 1
             
-    def _display_cursor(self):
+    def _draw_cursor(self):
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
     def kill(self):
         if self._code_prosessor.is_alive():
             self._code_prosessor.kill()
             
-  
             
 class Code_prosessor(multiprocessing.Process):
-    def __init__(self, path, custom_event_dict):
+    def __init__(self, name, path, custom_event_dict, multiprocessing_draw_queue: multiprocessing.Queue):
         super(Code_prosessor, self).__init__()
+        self._name = name
         self._path = path
+        self._x = 500
+        self._y = 300
+        self._width = 100
+        self._height = 100
         self._custom_event_dict = custom_event_dict
         self._framerate = 60
-        self._steps = 20
-        self._time = self._steps / self._framerate
+        self._time = 0.5
+        self._steps = int(self._framerate * self.time)
+        self._step_dist = int(200/self._steps)
+        print(self._framerate)
+        self._image_path = Path(__file__).parent / Path('sprites') / Path('scrach.png')
+        self._draw = self.draw
+        self._multiprocessing_draw_queue = multiprocessing_draw_queue
+        self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
     
     def run(self):
         try:
@@ -320,25 +341,36 @@ class Code_prosessor(multiprocessing.Process):
                 f'{traceback.format_exc()}'
                 f'##############################################################################\n'
             )
-    
+
     def move(self, direction: str):
         clock = pygame.time.Clock()
         if direction == 'up':
             for _ in range(self._steps):
-                self._custom_event_dict['MOVE_UP'].set()
+                #self._custom_event_dict['MOVE_UP'].set()
+                self._x -= self._step_dist
+                self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
                 clock.tick(self._framerate)
         elif direction == 'right':
             for _ in range(self._steps):
-                self._custom_event_dict['MOVE_RIGHT'].set()
+                #self._custom_event_dict['MOVE_RIGHT'].set()
+                self._y += self._step_dist
+                self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
                 clock.tick(self._framerate)
         elif direction == 'down':
             for _ in range(self._steps):
-                self._custom_event_dict['MOVE_DOWN'].set()
+                #self._custom_event_dict['MOVE_DOWN'].set()
+                self._x += self._step_dist
+                self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
                 clock.tick(self._framerate)
         elif direction == 'left':
             for _ in range(self._steps):
-                self._custom_event_dict['MOVE_LEFT'].set()
+                #self._custom_event_dict['MOVE_LEFT'].set()
+                self._y -= self._step_dist
+                self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height))
                 clock.tick(self._framerate)
+    
+    def draw(self):
+        self._costume = pygame.transform.scale(pygame.image.load(self._image_path), (100, 100))
     
     @property
     def time(self):

@@ -13,7 +13,6 @@ class Menue_controller:
         
         self._custom_event_dict = custom_event_dict
         self._button_list: list[interfacec.Button] = []
-        self._sprites_group = pygame.sprite.Group()
         
         self._button_quit = \
             interfacec.Button(
@@ -24,7 +23,6 @@ class Menue_controller:
                 "Quit",
                 lambda: pygame.event.post(pygame.event.Event(pygame.QUIT)),
             )
-        #self._sprites_group.add(self._button_quit.sprite)
         
         self._button_play = \
             interfacec.Button(
@@ -35,25 +33,22 @@ class Menue_controller:
                 "Play",
                 lambda: pygame.event.post(pygame.event.Event(self._custom_event_dict['PLAY'])),
             )
-        #self._sprites_group.add(self._button_play.sprite)
         
     
-    def display(self):
+    def draw(self):
         if self._display_menue == 'main':
             self.main_menue()
         if self._display_menue == 'game':
             self.inngame_menue()
 
     def main_menue(self):
-        self._sprites_group.update()
         self._button_list = [
         self._button_quit,
         self._button_play,
         ]
         
-        self._sprites_group.draw(self._surface)
         for button in self._button_list:
-            button.display(self._surface)
+            button.draw(self._surface)
         
     def inngame_menue(self):
         self._button_list = []

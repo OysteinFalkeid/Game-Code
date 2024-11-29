@@ -47,8 +47,6 @@ def main():
     }
     game_mode = 'GAME_MODE'
     
-    sprites_group = pygame.sprite.Group()
-    
     game = game_controller.Game(screen, width, height, custom_event_dict)
     #the game is activated via the main menue. where it is set to try to render the game
     display_game = False
@@ -117,19 +115,17 @@ def main():
             
             game.move_file_wiewer(pygame.mouse.get_rel())
 
-            sprites_group.update()      
             screen.fill(background_base_colour)
-            sprites_group.draw(screen)
             
             
-            menue_controller.display()
+            menue_controller.draw()
             if display_game:
-                player.display(screen)
-                game.render()
+                #player.draw(screen)
+                game.draw()
             
             if debug:
                 fps_displayer.set_text(str(round(clock.get_fps(), 2)))
-                fps_displayer.display(screen)
+                fps_displayer.draw(screen)
             pygame.display.flip()
             # currentley the limmiting factor for the annimation speed is the clock function integrated in the Code_prosessor class in game.py
             clock.tick(1000)  # limits FPS to 1000
@@ -151,7 +147,7 @@ class Player:
         self._y = y
         self._width = width
         self._height = height
-        self._path = Path(__file__).parent / Path('imports') / Path('sprites') / Path('scrach_1.png')
+        self._path = Path(__file__).parent / Path('imports') / Path('sprites') / Path('scrach.png')
         self._image = pygame.image.load(self._path)
     
     def move(self, direction: str):
@@ -164,7 +160,7 @@ class Player:
         elif direction == 'down':
             self._y += 3
     
-    def display(self, surface: pygame.Surface):
+    def draw(self, surface: pygame.Surface):
         # pygame.draw.rect(surface, (200, 200, 200), (self._x, self._y, self._width, self._height))   
         surface.blit(pygame.transform.scale(self._image, (self._width, self._height)), (self._x, self._y, self._width, self._height), (0, 0, self._width, self._height))
       
