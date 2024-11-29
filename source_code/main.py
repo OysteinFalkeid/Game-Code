@@ -31,19 +31,11 @@ def main():
     PLAY = pygame.event.custom_type()
     TEXT_MODE = pygame.event.custom_type()
     GAME_MODE = pygame.event.custom_type()
-    MOVE_UP = multiprocessing.Event()
-    MOVE_RIGHT = multiprocessing.Event()
-    MOVE_DOWN = multiprocessing.Event()
-    MOVE_LEFT = multiprocessing.Event()
     
     custom_event_dict = {
         'PLAY': PLAY,
         'TEXT_MODE': TEXT_MODE,
         'GAME_MODE': GAME_MODE,
-        'MOVE_UP': MOVE_UP,
-        'MOVE_RIGHT': MOVE_RIGHT,
-        'MOVE_DOWN': MOVE_DOWN,
-        'MOVE_LEFT': MOVE_LEFT,
     }
     game_mode = 'GAME_MODE'
     
@@ -97,21 +89,21 @@ def main():
                             game.eddit_file(event.unicode)
 
                         
-                elif event.type != pygame.MOUSEMOTION and debug == True:
-                    print(pygame.event.event_name(event.type))
-            
-            if custom_event_dict['MOVE_UP'].is_set():
-                player.move('up')
-                custom_event_dict['MOVE_UP'].clear()
-            elif custom_event_dict['MOVE_RIGHT'].is_set():
-                player.move('right')
-                custom_event_dict['MOVE_RIGHT'].clear()
-            elif custom_event_dict['MOVE_DOWN'].is_set():
-                player.move('down')
-                custom_event_dict['MOVE_DOWN'].clear()
-            elif custom_event_dict['MOVE_LEFT'].is_set():
-                player.move('left')
-                custom_event_dict['MOVE_LEFT'].clear()
+                # elif event.type != pygame.MOUSEMOTION and debug == True:
+                #     print(pygame.event.event_name(event.type))
+                
+            # if custom_event_dict['MOVE_UP'].is_set():
+            #     player.move('up')
+            #     custom_event_dict['MOVE_UP'].clear()
+            # elif custom_event_dict['MOVE_RIGHT'].is_set():
+            #     player.move('right')
+            #     custom_event_dict['MOVE_RIGHT'].clear()
+            # elif custom_event_dict['MOVE_DOWN'].is_set():
+            #     player.move('down')
+            #     custom_event_dict['MOVE_DOWN'].clear()
+            # elif custom_event_dict['MOVE_LEFT'].is_set():
+            #     player.move('left')
+            #     custom_event_dict['MOVE_LEFT'].clear()
             
             game.move_file_wiewer(pygame.mouse.get_rel())
 
@@ -128,7 +120,7 @@ def main():
                 fps_displayer.draw(screen)
             pygame.display.flip()
             # currentley the limmiting factor for the annimation speed is the clock function integrated in the Code_prosessor class in game.py
-            clock.tick(1000)  # limits FPS to 1000
+            clock.tick(80)  # limits FPS to 1000
             
             
             
