@@ -71,6 +71,11 @@ class Game:
         for file in self._file_dict.values():
             file.test_file_select(coordinate)
     
+    def move_file_wiewer(self, rel_coordinate):
+        for file in self._file_dict.values():
+            if file.movable:
+                file.move_text_edditer(rel_coordinate)
+    
     def pause(self):
         self._button_list = []
         
@@ -91,7 +96,7 @@ class File_wiewer:
         self._width = 1000
         self._height = 1000
         self._rectvalue = [0, 0, self._width, self._height]
-        self._coordinate = [self._x, self._y]
+        self._coordinate = (self._x, self._y)
         
         self._text_surface = pygame.Surface((self._width, self._height))
         self._sprites_group = pygame.sprite.Group()
@@ -114,6 +119,7 @@ class File_wiewer:
         #self._sprites_group.add(self._button_save.sprite)
         
         self.selected = False
+        self.movable = False
         if not Path.is_file(self._path):
             with open(self._path, 'x'):
                 pass
@@ -128,7 +134,6 @@ class File_wiewer:
         self._cursor_index = 0
         self._cursor_line = 0
         self._text_list_index = 0
-        
         
     def display(self, surface: pygame.Surface):
         self._sprites_group.update()
@@ -147,13 +152,17 @@ class File_wiewer:
         # every character is 11 pixels wide at a font size of 20
         # there is a 40 pixel gap for numbering and border
         # and there is a 10 pixel gap for border and breething room
-        self._width = max([len(line) for line in self._text_lines])* 11 + 40 + 10
+        self._width = max(max([len(line) for line in self._text_lines]), 20)* 11 + 40 + 10
         # the same applies for hight altho a 20 pixel spasing is suficient.
         self._height = len(self._text_lines) * 20 + 40 + 10
         self._rectvalue[2] = self._width
         self._text_surface = pygame.transform.scale(self._text_surface, (self._width, self._height))
         pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
+        pygame.draw.rect(self._text_surface, (30-15, 63-15, 90-15), (0, 0, self._width, 32))
+        
         self._sprites_group.draw(self._text_surface)
+        
+        self._text_surface.blit(self._font.render(self._name, True, 'white'), (130, 7))
         
         text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
         line_numbers = [self._font.render(str(i), True, 'white') for i in range(len(self._text_lines))]
@@ -173,10 +182,13 @@ class File_wiewer:
         if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
             self.selected = True
             pygame.event.post(pygame.event.Event(self._custom_event_dict['TEXT_MODE']))
+            if self._y < coordinate[1] < self._y + 32:
+                self.movable = True
         else:
             if self.selected:
                 self.selected = False
                 pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
+                self.movable = False
         
         self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
         self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
@@ -231,6 +243,10 @@ class File_wiewer:
             self._text_list.insert(self._text_list_index, keystroke)
             self._text_list_index += 1
             self._cursor_index += 1 
+    
+    def move_text_edditer(self, rel_coordinate):
+        if pygame.mouse.get_pressed(3)[0]:
+            self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
     
     def move_cursor(self, event):
         if event.key == pygame.K_UP:

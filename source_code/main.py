@@ -113,7 +113,9 @@ def main():
             elif custom_event_dict['MOVE_LEFT'].is_set():
                 player.move('left')
                 custom_event_dict['MOVE_LEFT'].clear()
-                    
+            
+            game.move_file_wiewer(pygame.mouse.get_rel())
+
             sprites_group.update()      
             screen.fill(background_base_colour)
             sprites_group.draw(screen)
