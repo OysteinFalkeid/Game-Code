@@ -14,3 +14,67 @@ In the source_code directory run the main.py file in the your python interpreter
 
 The easyest metod of downloading the project is to run git clone. otherwise a simple download from GitHub will sufice.
 
+## Missing implementations
+
+# Move
+
+The move function is implemented but is not adjustable
+Missing implementation of a time variable
+move must be implemented with a relative diraction and options for x and y spesific movement
+
+# Turn
+
+# Set Position
+
+# set direction
+bot a spesific rotation and a rotation rellative to mouse cursor
+
+# print
+Define print style in think or speak
+define time duration for print
+
+# sprite
+some premade custum paths to images in sprites
+ability to load custum sprites from sprite folder by name
+sprite should be a list and should be incrementable like the sprite.group class from pygame
+the background can be implemented as a sprite.
+sprites should be able to be rectangles and circles
+sprites should be transformable (resized)
+A true fals value for drawing the sprite
+
+# entity layer list
+layer objects to define draw order
+
+# sound
+???
+
+# keyboard events
+support for key press events
+
+# event handler 
+Support for custum events created by the playyer
+
+# defined start condition
+different start condition for running kode block. 
+This could be implemented with a droppdown menue
+
+# timer
+start timer
+stopp timer
+reset timer
+event on timer reaching time
+
+# random
+random number generator for float int and other
+
+# hitbox
+some sort of hitbox and event on hit
+on hit custumisable for user
+
+
+
+
+
+
+
+

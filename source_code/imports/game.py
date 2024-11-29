@@ -293,7 +293,8 @@ class File_wiewer:
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
     def kill(self):
-        self._code_prosessor.kill()
+        if self._code_prosessor.is_alive():
+            self._code_prosessor.kill()
             
   
             

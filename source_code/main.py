@@ -7,6 +7,7 @@ import traceback
 import imports.game as game_controller
 import multiprocessing
 import time
+from pathlib import Path
     
 # Define a custom sprite class
 
@@ -150,6 +151,8 @@ class Player:
         self._y = y
         self._width = width
         self._height = height
+        self._path = Path(__file__).parent / Path('imports') / Path('sprites') / Path('scrach_1.png')
+        self._image = pygame.image.load(self._path)
     
     def move(self, direction: str):
         if direction == 'right':
@@ -161,8 +164,9 @@ class Player:
         elif direction == 'down':
             self._y += 3
     
-    def display(self, surface):
-        pygame.draw.rect(surface, (200, 200, 200), (self._x, self._y, self._width, self._height))   
+    def display(self, surface: pygame.Surface):
+        # pygame.draw.rect(surface, (200, 200, 200), (self._x, self._y, self._width, self._height))   
+        surface.blit(pygame.transform.scale(self._image, (self._width, self._height)), (self._x, self._y, self._width, self._height), (0, 0, self._width, self._height))
       
 
 
