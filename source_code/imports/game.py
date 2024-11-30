@@ -19,6 +19,9 @@ class Game:
         self._width = width
         self._height = height
         self._surface = surface
+        self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), int(height/2))
+        self._colour = 'white'
+        self._print_list = []
         self._file_dict: dict[str, File_wiewer] = {}
         
         self._button_new_file = \
@@ -40,17 +43,34 @@ class Game:
         self._custom_event_queue= multiprocessing.Queue(128)
         
     def draw(self):
-        while not self._custom_event_queue.empty():
-            file, comand = self._custom_event_queue.get()
-            if comand == 'end':
-                self._file_dict[file].join(self._multiprocessing_draw_dict[file])
-        
+        while not self._multiprocessing_draw_queue.empty():
+            self._multiprocessing_draw_queue_handler(self._multiprocessing_draw_queue.get())
+            
         for values in self._multiprocessing_draw_dict.values():
             image = self.load_image(values[0])
             image = pygame.transform.scale(image, (values[3], values[4]))
             surface = pygame.transform.rotate(image, values[5])
             new_rect = surface.get_rect(center = image.get_rect(center = (values[1], values[2])).center)
             self._surface.blit(surface, new_rect)
+        
+        while not self._custom_event_queue.empty():
+            file, comand, values = self._custom_event_queue.get()
+            if comand == 'end':
+                self._file_dict[file].join(self._multiprocessing_draw_dict[file])
+            if comand == 'print':
+                self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 24)
+                self._text_surface = self._font.render(values[0], True, self._colour)
+                start_time = time.time()
+                self._print_list.append((self._text_surface, (values[1], values[2]), values[3], start_time))
+        
+        for i, prints in enumerate(self._print_list):
+            if prints[2] < time.time() - prints[3]:
+                self._print_list.pop(i)
+            else:
+                pygame.draw.rect(self._surface, 'black', (prints[1][0], prints[1][1], 125, 25))
+                self._surface.blit(prints[0], prints[1])
+            
+            
             
         for button in self._button_list:
             button.draw(self._surface)
@@ -58,9 +78,8 @@ class Game:
         for file in self._file_dict.values():
             file.draw(self._surface)
             
-        while not self._multiprocessing_draw_queue.empty():
-            self._multiprocessing_draw_queue_handler(self._multiprocessing_draw_queue.get())
-    
+        
+        
     @functools.lru_cache(maxsize=128)        
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
@@ -372,7 +391,7 @@ class Code_prosessor(multiprocessing.Process):
         try:
             with open(self._path, 'r') as file:
                 lines = file.read()
-                exec(lines, {'move': self.move, 'wait': self.wait, 'timer': self.timer, 'turn': self.turn})
+                exec(lines, {'move': self.move, 'wait': self.wait, 'timer': self.timer, 'random': self.random, 'turn': self.turn, 'print': self.print})
         except Exception as e:
             print(
                 f'##############################################################################\n'
@@ -382,7 +401,7 @@ class Code_prosessor(multiprocessing.Process):
                 f'##############################################################################\n'
             )
         finally:
-            self._custom_event_queue.put((self._name, ('end')))
+            self._custom_event_queue.put((self._name, ('end'), None))
         
     def move(self, distance: Optional[float] = None, time: Optional[float] = None, direction: Optional[str] = None):
         if time:
@@ -477,16 +496,17 @@ class Code_prosessor(multiprocessing.Process):
         else:
             return time.time() - self._timer
     
-    def random(self, min = None, max = None, float_value = False):
+    def random(self, min_value = None, max_value = None, float_value = False):
         random_num =  random.random()
-        if min:
-            random_num = random_num + min
-        elif min and max:
-            random_num = random_num*(max-min) + min
-        elif max:
-            random_num = random_num*max
+        if min_value and max_value:
+            random_num = random_num*(max_value-min_value) + min_value
+        elif min_value:
+            random_num = random_num + min_value
+        elif max_value:
+            random_num = random_num*max_value
         if not float_value:
             random_num = int(random_num)
+        print(random_num)
         return random_num
     
     def turn(self, angle, absolute = False):
@@ -502,6 +522,10 @@ class Code_prosessor(multiprocessing.Process):
                 self._angle += 360
                 
         self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height, self._angle))
-            
+    
+    def print(self, string: str = '', time_delay: Optional[float] = 1):
+        self._custom_event_queue.put((self._name, ('print'), (string, self._x, self._y, time_delay)))
+        time.sleep(time_delay)
+        
 
             

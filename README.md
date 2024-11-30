@@ -29,11 +29,13 @@ move must be implemented with a relative direction and options for x and y spesi
 
 
 ## Turn
+1. has ben implemented with a relative and absolute value alternative
 
 ## Set Position
 
 ## set direction
 bot a spesific rotation and a rotation rellative to mouse cursor
+1. integrated innto the turn function
 
 ## print
 Define print style in think or speak
