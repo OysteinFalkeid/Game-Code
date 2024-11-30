@@ -22,9 +22,10 @@ The move function is implemented but is not adjustable
 1. note the move function is adjustable but parameters ar not definable
 
 Missing implementation of a time variable
-1. time is implemented and adjust stem_disst and number of steps
+1. time is implemented and adjust step_disst and number of steps
 
 move must be implemented with a relative direction and options for x and y spesific movement
+
 
 # Turn
 

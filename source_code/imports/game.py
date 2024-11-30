@@ -353,7 +353,7 @@ class Code_prosessor(multiprocessing.Process):
         self._steps = int(self._framerate * self._time)
         self._step_dist = int(200/self._steps)
         print(self._framerate)
-        self._image_path = Path(__file__).parent / Path('sprites') / Path('scrach.png')
+        self._image_path = Path(__file__).parent / Path('sprites') / Path('icon.png')
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._multiprocessing_draw_queue.put(
             (

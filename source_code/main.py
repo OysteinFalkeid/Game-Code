@@ -27,6 +27,8 @@ def main():
     #The colour to set the screen to between every frame.
     background_base_colour = 30, 63, 90
     screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+    pygame.display.set_caption('Game Code', 'Game Code')
+    pygame.display.set_icon(pygame.image.load((Path(__file__).parent / Path('imports') / Path('sprites') / Path('icon.png'))))
     
     PLAY = pygame.event.custom_type()
     TEXT_MODE = pygame.event.custom_type()
