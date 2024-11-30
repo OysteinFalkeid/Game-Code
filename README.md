@@ -1,23 +1,23 @@
-## Educational programing in Python ![alt text](https://github.com/OysteinFalkeid/GameCode/blob/main/source_code/imports/sprites/icon.png)
+# Educational programing in Python ![alt text](https://github.com/OysteinFalkeid/GameCode/blob/main/source_code/imports/sprites/icon.png)
 ![alt text](https://github.com/OysteinFalkeid/GameCode/blob/main/source_code/imports/sprites/Screenshot.png)
 
 this program is written in and runs in python.
 current version suport is python 3.12.6 other versions shold work
 
-## ownership
+# ownership
 This project is created and oned by Øystein Falkeid.
 The program is free to use and distribute for educational purpuses.
 A 'GNU GENERAL PUBLIC LICENSE' Version 3, 29 June 2007 has been added and 
 can be red on https://github.com/OysteinFalkeid/GameCode
 
-## geting started
+# geting started
 In the source_code directory run the main.py file in the your python interpreter. (python 3.12 has been tested)
 
 The easyest metod of downloading the project is to run git clone. otherwise a simple download from GitHub will sufice.
 
-## Missing implementations
+# Missing implementations
 
-# Move
+## Move
 
 The move function is implemented but is not adjustable
 1. note the move function is adjustable but parameters ar not definable
@@ -28,18 +28,18 @@ Missing implementation of a time variable
 move must be implemented with a relative direction and options for x and y spesific movement
 
 
-# Turn
+## Turn
 
-# Set Position
+## Set Position
 
-# set direction
+## set direction
 bot a spesific rotation and a rotation rellative to mouse cursor
 
-# print
+## print
 Define print style in think or speak
 define time duration for print
 
-# sprite
+## sprite
 some premade custum paths to images in sprites
 1. path is sent to main game handler where it is loaded as a sprite
 
@@ -56,23 +56,23 @@ sprites should be transformable (resized)
 
 A true fals value for drawing the sprite
 
-# entity layer list
+## entity layer list
 layer objects to define draw order
 
-# sound
+## sound
 ???
 
-# keyboard events
+## keyboard events
 support for key press events
 
-# event handler 
+## event handler 
 Support for custum events created by the playyer
 
-# defined start condition
+## defined start condition
 different start condition for running kode block. 
 This could be implemented with a droppdown menue
 
-# timer
+## timer
 start timer
 1. timer start uppon prosess start
 
@@ -88,10 +88,10 @@ event on timer reaching time
 time delay
 1. A simple wait function implemented
 
-# random
+## random
 random number generator for float int and other
 
-# hitbox
+## hitbox
 some sort of hitbox and event on hit
 on hit custumisable for user
 
