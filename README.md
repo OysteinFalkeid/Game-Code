@@ -1,5 +1,7 @@
 ## Educational programing in Python
 
+![alt text](http://url/to/img.png)
+
 this program is written in and runs in python.
 current version suport is python 3.12.6 other versions shold work
 
