@@ -1,6 +1,4 @@
-## Educational programing in Python
-
-![alt text](https://github.com/OysteinFalkeid/GameCode/blob/main/source_code/imports/sprites/icon.png)
+## Educational programing in Python ![alt text](https://github.com/OysteinFalkeid/GameCode/blob/main/source_code/imports/sprites/icon.png)
 
 this program is written in and runs in python.
 current version suport is python 3.12.6 other versions shold work
