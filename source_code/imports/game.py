@@ -59,16 +59,22 @@ class Game:
                 self._file_dict[file].join(self._multiprocessing_draw_dict[file])
             if comand == 'print':
                 self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 24)
-                self._text_surface = self._font.render(values[0], True, self._colour)
+                string: str = values[0]
+                string_list = string.replace('\t', '    ').split('\n')
+                text_surface_list = [self._font.render(string, True, 'black') for string in string_list]
+                
                 start_time = time.time()
-                self._print_list.append((self._text_surface, (values[1], values[2]), values[3], start_time))
+                self._print_list.append((text_surface_list, (values[1], values[2]), values[3], start_time))
         
         for i, prints in enumerate(self._print_list):
             if prints[2] < time.time() - prints[3]:
                 self._print_list.pop(i)
             else:
-                pygame.draw.rect(self._surface, 'black', (prints[1][0], prints[1][1], 125, 25))
-                self._surface.blit(prints[0], prints[1])
+                height = len(prints[0])
+                width = max([text_surface.get_width() for text_surface in prints[0]])
+                pygame.draw.rect(self._surface, 'white', (prints[1][0], prints[1][1], width + 8, height * 24))
+                for i, string in enumerate(prints[0]):
+                    self._surface.blit(string, (prints[1][0]+ 4, prints[1][1] + i*24))
             
             
             
@@ -285,6 +291,11 @@ class File_wiewer:
         #every other char is simly printed to the dokument. 
         #This means that button presses like delete or CapsLock will be printed
         #More finetuneing neaded
+        elif keystroke == '\t':
+            for _ in range(4):
+                self._text_list.insert(self._text_list_index, ' ')
+                self._text_list_index += 1
+                self._cursor_index += 1
         else:
             self._text_list.insert(self._text_list_index, keystroke)
             self._text_list_index += 1
@@ -391,7 +402,16 @@ class Code_prosessor(multiprocessing.Process):
         try:
             with open(self._path, 'r') as file:
                 lines = file.read()
-                exec(lines, {'move': self.move, 'wait': self.wait, 'timer': self.timer, 'random': self.random, 'turn': self.turn, 'print': self.print})
+                exec(lines, 
+                    {
+                        'move': Add__str__func(self.move), 
+                        'wait': Add__str__func(self.wait), 
+                        'timer': Add__str__func(self.timer), 
+                        'random': Add__str__func(self.random), 
+                        'turn': Add__str__func(self.turn), 
+                        'print': Add__str__func(self.print)
+                    }
+                )
         except Exception as e:
             print(
                 f'##############################################################################\n'
@@ -404,9 +424,36 @@ class Code_prosessor(multiprocessing.Process):
             self._custom_event_queue.put((self._name, ('end'), None))
         
     def move(self, distance: Optional[float] = None, time: Optional[float] = None, direction: Optional[str] = None):
+        """
+        Moves the sprite
+
+        Args:
+            distance (float, optional): Distance the sprite is moved.
+            time (float, optional): Time the sprite takes to move the spesified distance
+            direction (str, optional): Direction the sprite is moved in. 
+                If None the sprite moves in the direction spessified by the turn() function
+
+        Examples:
+            >>> move(distance=100, time=1, direction='rught')
+            Moves the sprite 100 pixels to the right for a duration of 1 second.
+            
+            >>> move(100, 1, 'rught')
+            Moves the sprite 100 pixels to the right for a duration of 1 second.
+            
+            >>> move(100, 1)
+            Moves the sprite 100 pixels in the direction of the sprite for 1 a duration of 1 second.
+            
+            >>> move(100)
+            Moves the sprite 100 pixels instantaniusly.
+        """
+        
         if time:
             self._time = time
             self._steps = int(self._framerate * self._time)
+        else:
+            self._time = 0
+            self._steps = 1
+        
         if distance:
             self._step_dist = int(distance/self._steps)
             
@@ -488,15 +535,53 @@ class Code_prosessor(multiprocessing.Process):
                 clock.tick(self._framerate)
     
     def wait(self, secounds):
+        '''
+        Runs a sleep comand pausing the file execution.
+        
+        Args:
+            secounds (float): The amount of secounds to pause the file execution.
+        
+        Examples:
+            >>> wait(1)
+                Pauses the program for 1 secound
+        '''
         time.sleep(secounds)
     
     def timer(self, reset = False):
+        '''
+        A timer returning time since timer start or resets the timer
+        
+        Args:
+            reset (bool, optional): If True, resets the timer.
+        
+        Examples:
+            >>> timer()
+                Returns the time since the timer was started
+            >>> timer(True)
+                Resets the timer
+        '''
         if reset:
             self._timer = time.time()
         else:
             return time.time() - self._timer
     
     def random(self, min_value = None, max_value = None, float_value = False):
+        '''
+        Returns a random number.
+        
+        Args:
+            min_value (float, optional): The minimum value of the random number.
+            max_value (float, optional): The maximum value of the random number.
+            float_value (bool, optional): If True, returns a float (desimal) value.
+            
+        Examples:
+            >>> random()
+                Returns a random number between 0 and 1. [0 or 1]
+            >>> random(1, 10)  
+                Returns a random number between 1 and 10. [1 or 3 or 7 or 4 or 10 or 2 or 5]
+            >>> random(1, 10, True)
+                Returns a random float between 1 and 10. [1.234 or 3.456 or 7.890 or 4.321 or 9.123 or 2.345 or 5.678]
+        '''
         random_num =  random.random()
         if min_value and max_value:
             random_num = random_num*(max_value-min_value) + min_value
@@ -524,8 +609,17 @@ class Code_prosessor(multiprocessing.Process):
         self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height, self._angle))
     
     def print(self, string: str = '', time_delay: Optional[float] = 1):
-        self._custom_event_queue.put((self._name, ('print'), (string, self._x, self._y, time_delay)))
+        self._custom_event_queue.put((self._name, ('print'), (str(string), self._x, self._y, time_delay)))
         time.sleep(time_delay)
         
+class Add__str__func:
+    def __init__(self, func):
+        self.func = func
+        self.__doc__ = func.__doc__
 
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def __repr__(self):
+        return self.__doc__
             

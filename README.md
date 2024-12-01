@@ -40,6 +40,8 @@ bot a spesific rotation and a rotation rellative to mouse cursor
 ## print
 Define print style in think or speak
 define time duration for print
+1. print has a time implementation 
+2. the printed text is currentley printed at the sprites center.
 
 ## sprite
 some premade custum paths to images in sprites
@@ -92,6 +94,10 @@ time delay
 
 ## random
 random number generator for float int and other
+1. the random number gennerator is based uppon a float number from 0 to 1.
+2. the standard opperation is to return this float as 0 or 1
+3. spessifying a min and max value sets the span of the random number.
+4. spessifying the float variable as true disables the typcasting to int.
 
 ## hitbox
 some sort of hitbox and event on hit
