@@ -200,6 +200,34 @@ class File_wiewer:
         self._text_lines: list[str] = []
         self._font= pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 20)
         
+        # RegEx for finding and colouring words in the draw function
+        keywords = [
+            # class spesific
+            'move', 'wait', 'print', 'turn', 'random', 'keypress', 
+            # for loops
+            'for', 'in', 'range', 
+            # other
+            'while', 
+            # if teststs
+            'elif', 'if', 'else', 
+            # defines
+            'True', 'False', 'None'
+        ]
+        self._function_regex = re.compile(r'\b(?:' + '|'.join(keywords) + r')\b')
+        
+        self._number_regex = re.compile(r'\b\d+\b')
+        
+        keywords = [
+            '(', ')', '{', '}', '[', ']', 
+            ',', ':', ';', '.',
+            '+', '-', '*', '/', '%', '+=', '-=', '*=', '/=', '%=',
+            '=', '<', '>', '!', '==', '<=', '>=', '!=', '&'
+        ]
+        
+        self._operator_regex = re.compile(r'(?:' +'|'.join(map(re.escape, keywords)) + r')')
+        
+        self._coment_regex = re.compile(r'#.*')
+        
         self._cursor = self._font.render('|', True, 'white')
         self._cursor_index = 0
         self._cursor_line = 0
@@ -227,26 +255,81 @@ class File_wiewer:
         self._rectvalue[2] = self._width
         self._text_surface = pygame.transform.scale(self._text_surface, (self._width, self._height))
         pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
-        pygame.draw.rect(self._text_surface, (30-15, 63-15, 90-15), (0, 0, self._width, 32))
+        pygame.draw.rect(self._text_surface, (15, 48, 75), (0, 0, self._width, 32))
         
         self._text_surface.blit(self._font.render(self._name, True, 'white'), (130, 7))
         
         text_list: list[pygame.font.Font.render] = []
-        
-        function_regex = 'move|wait|print|turn'
-        
+       
+        colour_text_list = []
+        match_index_list: list[tuple] = []
+        colour_text_lines_list  = []
         for line in self._text_lines:
-            x = re.search(function_regex, line)
-            if x:
-                print(x.span())
-            text_list.append(self._font.render(line, True, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))))
+            #functions
+            match_object_list = re.finditer(self._function_regex, line.split('#')[0])
+            match_index_list = []
+            for match_object in match_object_list:
+                match_index_list.append(match_object.span())
+            
+            for span in match_index_list:
+                colour_text_list.append((
+                        self._font.render(line[span[0]:span[1]], True, (15, 48, 75)),
+                        span[0], span[1]
+                    )
+                )
+            
+            #numbers
+            match_object_list = re.finditer(self._number_regex, line.split('#')[0])
+            match_index_list = []
+            for match_object in match_object_list:
+                match_index_list.append(match_object.span())
+            
+            for span in match_index_list:
+                colour_text_list.append((
+                        self._font.render(line[span[0]:span[1]], True, (255, 255, 204)),
+                        span[0], span[1]
+                        )
+                    )
+
+            #Opperators
+            match_object_list = re.finditer(self._operator_regex, line.split('#')[0])
+            match_index_list = []
+            for match_object in match_object_list:
+                match_index_list.append(match_object.span())
+            
+            for span in match_index_list:
+                colour_text_list.append((
+                        self._font.render(line[span[0]:span[1]], True, (255, 255, 255)),
+                        span[0], span[1]
+                        )
+                    )
+            
+             #coments
+            match_object_list = re.finditer(self._coment_regex, line)
+            match_index_list = []
+            for match_object in match_object_list:
+                match_index_list.append(match_object.span())
+            
+            for span in match_index_list:
+                colour_text_list.append((
+                        self._font.render(line[span[0]:span[1]], True, (0, 153, 51)),
+                        span[0], span[1]
+                        )
+                    )
                 
+            colour_text_lines_list.append(colour_text_list)
+            colour_text_list = []
         
-        #text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
-        line_numbers = [self._font.render(str(i), True, 'white') for i in range(len(self._text_lines))]
+        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, (102, 204, 255)) for i, text in enumerate(self._text_lines)]
+        
+        line_numbers = [self._font.render(str(i), True, (217, 217, 217)) for i in range(len(self._text_lines))]
         
         for i, text in enumerate(text_list):
             self._text_surface.blit(text, (40, i*20 + 40))
+        
+        for i, text_list in enumerate(colour_text_lines_list):
+            for text in text_list:
+                self._text_surface.blit(text[0], (40 + text[1] * 11, (i )*20 + 40))
         
         for i, number in enumerate(line_numbers):
             self._text_surface.blit(number, (0, i*20 + 40))
@@ -256,7 +339,7 @@ class File_wiewer:
         self._button_stop.draw(self._text_surface)
         self._draw_cursor()
         surface.blit(self._text_surface, self._coordinate)
-        #raise KeyboardInterrupt
+        # raise KeyboardInterrupt
                 
     def test_file_select(self, coordinate):
         if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
