@@ -89,6 +89,9 @@ def main():
                              game.send_key_to_file_wiewer(event)
                         else:
                             game.eddit_file(event.unicode)
+                    else:
+                        game.add_keystroke_to_queue(event.unicode)
+                    
 
                         
                 # elif event.type != pygame.MOUSEMOTION and debug == True:

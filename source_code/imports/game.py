@@ -75,18 +75,14 @@ class Game:
                 pygame.draw.rect(self._surface, 'white', (prints[1][0], prints[1][1], width + 8, height * 24))
                 for i, string in enumerate(prints[0]):
                     self._surface.blit(string, (prints[1][0]+ 4, prints[1][1] + i*24))
-            
-            
-            
+             
         for button in self._button_list:
             button.draw(self._surface)
             
         for file in self._file_dict.values():
             file.draw(self._surface)
             
-        
-        
-    @functools.lru_cache(maxsize=128)        
+    #@functools.lru_cache(maxsize=128) # causes some move functionality to not compute corectley       
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
         
@@ -104,11 +100,15 @@ class Game:
             self._custom_event_queue
         )
     
-    def eddit_file(self, keystroke: str):
+    def eddit_file(self, keystroke: str):   
         for file in self._file_dict.values():
             if file.selected:
                 file.text_edditer(keystroke)
                 break
+            
+    def add_keystroke_to_queue(self, keystroke):
+        for file in self._file_dict.values():
+            file.add_keystroke_to_queue(keystroke)
     
     def send_key_to_file_wiewer(self, event):
         for file in self._file_dict.values():
@@ -157,7 +157,15 @@ class File_wiewer:
         self._custom_event_dict = custom_event_dict
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._custom_event_queue = custom_event_queue
-        self._code_prosessor = Code_prosessor(self._name, self._path, self._custom_event_queue, self._multiprocessing_draw_queue)
+        self._keypress_queue = multiprocessing.Queue(4)
+        self._code_prosessor = \
+            Code_prosessor(
+                self._name, 
+                self._path, 
+                self._custom_event_queue, 
+                self._multiprocessing_draw_queue,
+                self._keypress_queue,
+            )
         
         self._button_play = \
             interfacec.Button(
@@ -173,6 +181,12 @@ class File_wiewer:
                 lambda: self.save(), 
             )
         
+        self._button_stop = \
+            interfacec.Button(
+                128, 0, 64, 32,
+                'stop',
+                lambda: self.stop(),
+            )
         self.selected = False
         self.movable = False
         if not Path.is_file(self._path):
@@ -216,6 +230,13 @@ class File_wiewer:
         
         self._text_surface.blit(self._font.render(self._name, True, 'white'), (130, 7))
         
+        text_list: list[pygame.font.Font.render] = []
+        
+        for i, line in enumerate(self._text_lines):
+            for j, char in enumerate(line):
+                pass
+                
+        
         text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
         line_numbers = [self._font.render(str(i), True, 'white') for i in range(len(self._text_lines))]
         
@@ -227,6 +248,7 @@ class File_wiewer:
             
         self._button_play.draw(self._text_surface)
         self._button_save.draw(self._text_surface)
+        self._button_stop.draw(self._text_surface)
         self._draw_cursor()
         surface.blit(self._text_surface, self._coordinate)
                 
@@ -244,6 +266,7 @@ class File_wiewer:
         
         self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
         self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
+        self._button_stop.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
         
     def run_code(self):
         self.save()
@@ -253,6 +276,9 @@ class File_wiewer:
     def save(self):
         with open(self._path, 'w') as file:
             file.write(''.join(self._text_list))
+    
+    def stop(self):
+        self.kill()
     
     def text_edditer(self, keystroke: str):
         # Gets keystroces as unicode character and inserts these in the string representation of the file
@@ -300,7 +326,15 @@ class File_wiewer:
             self._text_list.insert(self._text_list_index, keystroke)
             self._text_list_index += 1
             self._cursor_index += 1 
-    
+            
+    def add_keystroke_to_queue(self, keystroke:str):
+        if self._code_prosessor.is_alive():
+            if not self._keypress_queue.full():
+                self._keypress_queue.put(keystroke)
+            else:
+                self._keypress_queue.get()
+                self._keypress_queue.put(keystroke)
+        
     def move_text_edditer(self, rel_coordinate):
         if pygame.mouse.get_pressed(3)[0]:
             self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
@@ -320,9 +354,10 @@ class File_wiewer:
             if len(self._text_lines[self._cursor_line]) < self._cursor_index:
                 self._cursor_index = len(self._text_lines[self._cursor_line])
             elif len(self._text_lines[self._cursor_line]) == self._cursor_index:
-                self._cursor_index = 0
-                self._cursor_line += 1
-                self._text_list_index += 1
+                if self._text_list_index < len(self._text_list):
+                    self._cursor_index = 0
+                    self._cursor_line += 1
+                    self._text_list_index += 1
             else:
                 self._cursor_index += 1 
                 self._text_list_index += 1
@@ -355,20 +390,35 @@ class File_wiewer:
     
     def join(self, values):
         self._code_prosessor.join()
-        self._code_prosessor = Code_prosessor(
-            self._name, 
-            self._path, 
-            self._custom_event_queue, 
-            self._multiprocessing_draw_queue, 
-            values[1], 
-            values[2],
-            values[3], 
-            values[4], 
-            values[5]
-        )
+        self._code_prosessor = \
+            Code_prosessor(
+                self._name, 
+                self._path, 
+                self._custom_event_queue, 
+                self._multiprocessing_draw_queue, 
+                self._keypress_queue,
+                values[1], 
+                values[2],
+                values[3], 
+                values[4], 
+                values[5]
+            )
             
 class Code_prosessor(multiprocessing.Process):
-    def __init__(self, name, path, custom_event_queue: multiprocessing.Queue, multiprocessing_draw_queue: multiprocessing.Queue, x: float = 500, y: float = 300, width: float = 100, height: float = 100, angle: float = 0):
+    def __init__(
+            self, 
+            name, 
+            path, 
+            custom_event_queue: multiprocessing.Queue, 
+            multiprocessing_draw_queue: multiprocessing.Queue, 
+            keypress_queue: multiprocessing.Queue,
+            x: float = 500, 
+            y: float = 300, 
+            width: float = 100, 
+            height: float = 100, 
+            angle: float = 0,
+            
+        ):
         super(Code_prosessor, self).__init__()
         self._name = name
         self._path = path
@@ -396,6 +446,7 @@ class Code_prosessor(multiprocessing.Process):
                 self._angle             #6
             )
         )
+        self._keypress_queue = keypress_queue
     
     def run(self):
         self._timer = time.time()
@@ -409,7 +460,8 @@ class Code_prosessor(multiprocessing.Process):
                         'timer': Add__str__func(self.timer), 
                         'random': Add__str__func(self.random), 
                         'turn': Add__str__func(self.turn), 
-                        'print': Add__str__func(self.print)
+                        'print': Add__str__func(self.print),
+                        'keypress': Add__str__func(self.keypress),
                     }
                 )
         except Exception as e:
@@ -446,7 +498,6 @@ class Code_prosessor(multiprocessing.Process):
             >>> move(100)
             Moves the sprite 100 pixels instantaniusly.
         """
-        
         if time:
             self._time = time
             self._steps = int(self._framerate * self._time)
@@ -461,7 +512,7 @@ class Code_prosessor(multiprocessing.Process):
         if direction == 'up':
             for _ in range(self._steps):
                 #self._custom_event_dict['MOVE_UP'].set()
-                self._x -= self._step_dist
+                self._y -= self._step_dist
                 self._multiprocessing_draw_queue.put(
                     (
                         self._name, 
@@ -471,12 +522,13 @@ class Code_prosessor(multiprocessing.Process):
                         self._height, 
                         self._angle
                     )
-                )                
-                clock.tick(self._framerate)
+                ) 
+                if self._time:               
+                    clock.tick(self._framerate)
         elif direction == 'right':
             for _ in range(self._steps):
                 #self._custom_event_dict['MOVE_RIGHT'].set()
-                self._y += self._step_dist
+                self._x += self._step_dist
                 self._multiprocessing_draw_queue.put(
                     (
                         self._name, 
@@ -506,7 +558,7 @@ class Code_prosessor(multiprocessing.Process):
         elif direction == 'left':
             for _ in range(self._steps):
                 #self._custom_event_dict['MOVE_LEFT'].set()
-                self._y -= self._step_dist
+                self._x -= self._step_dist
                 self._multiprocessing_draw_queue.put(
                     (
                         self._name, 
@@ -611,7 +663,12 @@ class Code_prosessor(multiprocessing.Process):
     def print(self, string: str = '', time_delay: Optional[float] = 1):
         self._custom_event_queue.put((self._name, ('print'), (str(string), self._x, self._y, time_delay)))
         time.sleep(time_delay)
-        
+    
+    def keypress(self):
+        if self._keypress_queue.empty():
+            return None
+        else:
+            return self._keypress_queue.get()
 class Add__str__func:
     def __init__(self, func):
         self.func = func
