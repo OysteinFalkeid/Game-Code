@@ -12,6 +12,7 @@ import multiprocessing
 import functools
 import random
 import math
+import re
 
 
 class Game:
@@ -232,12 +233,16 @@ class File_wiewer:
         
         text_list: list[pygame.font.Font.render] = []
         
-        for i, line in enumerate(self._text_lines):
-            for j, char in enumerate(line):
-                pass
+        function_regex = 'move|wait|print|turn'
+        
+        for line in self._text_lines:
+            x = re.search(function_regex, line)
+            if x:
+                print(x.span())
+            text_list.append(self._font.render(line, True, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))))
                 
         
-        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
+        #text_list: list[pygame.font.Font.render] = [self._font.render(text, True, 'white') for i, text in enumerate(self._text_lines)]
         line_numbers = [self._font.render(str(i), True, 'white') for i in range(len(self._text_lines))]
         
         for i, text in enumerate(text_list):
@@ -251,6 +256,7 @@ class File_wiewer:
         self._button_stop.draw(self._text_surface)
         self._draw_cursor()
         surface.blit(self._text_surface, self._coordinate)
+        #raise KeyboardInterrupt
                 
     def test_file_select(self, coordinate):
         if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
