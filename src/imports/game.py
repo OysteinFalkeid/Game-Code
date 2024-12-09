@@ -66,6 +66,11 @@ class Game:
                 
                 start_time = time.time()
                 self._print_list.append((text_surface_list, (values[1], values[2]), values[3], start_time))
+            if comand == 'on_hit':
+                if self._multiprocessing_draw_dict[values][1] + self._multiprocessing_draw_dict[file][3] > self._multiprocessing_draw_dict[file][1] > self._multiprocessing_draw_dict[values][1] - self._multiprocessing_draw_dict[file][3]:
+                    if self._multiprocessing_draw_dict[values][2] + self._multiprocessing_draw_dict[file][4] > self._multiprocessing_draw_dict[file][2] > self._multiprocessing_draw_dict[values][2] - self._multiprocessing_draw_dict[file][4]:
+                        self._file_dict[file].send_event_value('on_hit')
+                
         
         for i, prints in enumerate(self._print_list):
             if prints[2] < time.time() - prints[3]:
@@ -82,8 +87,7 @@ class Game:
             
         for file in self._file_dict.values():
             file.draw(self._surface)
-            
-    #@functools.lru_cache(maxsize=128) # causes some move functionality to not compute corectley       
+                  
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
         
@@ -120,8 +124,12 @@ class Game:
         for button in self._button_list:
             button.test_button_press(coordinate)
             
-        for file in self._file_dict.values():
-            file.test_file_select(coordinate)
+        for key in reversed(self._file_dict):
+            # print(key)
+            if self._file_dict[key].test_file_select(coordinate):
+                self._file_dict[key] = self._file_dict.pop(key)
+                break
+        
     
     def move_file_wiewer(self, rel_coordinate):
         for file in self._file_dict.values():
@@ -159,6 +167,7 @@ class File_wiewer:
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._custom_event_queue = custom_event_queue
         self._keypress_queue = multiprocessing.Queue(4)
+        self._event_queue = multiprocessing.Queue(128)
         self._code_prosessor = \
             Code_prosessor(
                 self._name, 
@@ -166,6 +175,7 @@ class File_wiewer:
                 self._custom_event_queue, 
                 self._multiprocessing_draw_queue,
                 self._keypress_queue,
+                self._event_queue,
             )
         
         self._button_play = \
@@ -203,7 +213,7 @@ class File_wiewer:
         # RegEx for finding and colouring words in the draw function
         keywords = [
             # class spesific
-            'move', 'wait', 'print', 'turn', 'random', 'keypress', 
+            'move_to', 'move', 'wait', 'print', 'turn', 'random', 'keypress', 'on_hit',
             # for loops
             'for _','for',  'in', 'range', 
             # other
@@ -251,13 +261,15 @@ class File_wiewer:
         # and there is a 10 pixel gap for border and breething room
         self._width = max(max([len(line) for line in self._text_lines]), 20)* 11 + 40 + 10
         # the same applies for hight altho a 20 pixel spasing is suficient.
-        self._height = len(self._text_lines) * 20 + 40 + 10
         self._rectvalue[2] = self._width
-        self._text_surface = pygame.transform.scale(self._text_surface, (self._width, self._height))
-        pygame.draw.rect(self._text_surface, (170,170,170), self._rectvalue)
+        self._height = len(self._text_lines) * 20 + 40 + 10
+        self._rectvalue[3] = self._height
+        self._text_surface = pygame.transform.scale(self._text_surface, (self._width+4, self._height+4))
+        pygame.draw.rect(self._text_surface, (0,0,0), (self._x, self._y, self._width+4, self._height+4))
+        pygame.draw.rect(self._text_surface, (170,170,170), (2, 2, self._width, self._height))
         pygame.draw.rect(self._text_surface, (15, 48, 75), (0, 0, self._width, 32))
         
-        self._text_surface.blit(self._font.render(self._name, True, 'white'), (130, 7))
+        self._text_surface.blit(self._font.render(self._name, True, 'white'), (230, 7))
         
         text_list: list[pygame.font.Font.render] = []
        
@@ -320,19 +332,19 @@ class File_wiewer:
             colour_text_lines_list.append(colour_text_list)
             colour_text_list = []
         
-        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, (102, 204, 255)) for i, text in enumerate(self._text_lines)]
+        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, (0, 0, 0)) for i, text in enumerate(self._text_lines)]
         
         line_numbers = [self._font.render(str(i), True, (217, 217, 217)) for i in range(len(self._text_lines))]
         
         for i, text in enumerate(text_list):
-            self._text_surface.blit(text, (40, i*20 + 40))
+            self._text_surface.blit(text, (42, i*20 + 40))
         
         for i, text_list in enumerate(colour_text_lines_list):
             for text in text_list:
-                self._text_surface.blit(text[0], (40 + text[1] * 11, (i )*20 + 40))
+                self._text_surface.blit(text[0], (42 + text[1] * 11, (i )*20 + 40))
         
         for i, number in enumerate(line_numbers):
-            self._text_surface.blit(number, (0, i*20 + 40))
+            self._text_surface.blit(number, (3, i*20 + 40))
             
         self._button_play.draw(self._text_surface)
         self._button_save.draw(self._text_surface)
@@ -345,21 +357,25 @@ class File_wiewer:
         if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
             self.selected = True
             pygame.event.post(pygame.event.Event(self._custom_event_dict['TEXT_MODE']))
+            self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
+            self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
+            self._button_stop.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             if self._y < coordinate[1] < self._y + 32:
                 self.movable = True
+            else:
+                self.movable = False
+            return True
         else:
             if self.selected:
                 self.selected = False
                 pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
                 self.movable = False
-        
-        self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
-        self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
-        self._button_stop.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
+            return False
         
     def run_code(self):
         self.save()
         if not self._code_prosessor.is_alive():
+            self.kill()
             self._code_prosessor.start()
         
     def save(self):
@@ -368,6 +384,9 @@ class File_wiewer:
     
     def stop(self):
         self.kill()
+    
+    def send_event_value(self, value):
+        self._event_queue.put(value)
     
     def text_edditer(self, keystroke: str):
         # Gets keystroces as unicode character and inserts these in the string representation of the file
@@ -474,8 +493,10 @@ class File_wiewer:
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
     def kill(self):
-        if self._code_prosessor.is_alive():
+        try:
             self._code_prosessor.kill()
+        except:
+            pass
     
     def join(self, values):
         self._code_prosessor.join()
@@ -486,6 +507,7 @@ class File_wiewer:
                 self._custom_event_queue, 
                 self._multiprocessing_draw_queue, 
                 self._keypress_queue,
+                self._event_queue,
                 values[1], 
                 values[2],
                 values[3], 
@@ -501,6 +523,7 @@ class Code_prosessor(multiprocessing.Process):
             custom_event_queue: multiprocessing.Queue, 
             multiprocessing_draw_queue: multiprocessing.Queue, 
             keypress_queue: multiprocessing.Queue,
+            event_queue: multiprocessing.Queue,
             x: float = 500, 
             y: float = 300, 
             width: float = 100, 
@@ -536,6 +559,8 @@ class Code_prosessor(multiprocessing.Process):
             )
         )
         self._keypress_queue = keypress_queue
+        self._event_queue = event_queue
+        self._on_hit = False
     
     def run(self):
         self._timer = time.time()
@@ -545,12 +570,14 @@ class Code_prosessor(multiprocessing.Process):
                 exec(lines, 
                     {
                         'move': Add__str__func(self.move), 
+                        'move_to': Add__str__func(self.move_to),
                         'wait': Add__str__func(self.wait), 
                         'timer': Add__str__func(self.timer), 
                         'random': Add__str__func(self.random), 
                         'turn': Add__str__func(self.turn), 
                         'print': Add__str__func(self.print),
                         'keypress': Add__str__func(self.keypress),
+                        'on_hit': Add__str__func(self.on_hit),
                     }
                 )
         except Exception as e:
@@ -675,6 +702,53 @@ class Code_prosessor(multiprocessing.Process):
                 )                
                 clock.tick(self._framerate)
     
+    def move_to(self, x, y):
+        self._x = x
+        self._y = y
+        self._multiprocessing_draw_queue.put(
+            (
+                self._name, 
+                self._image_path, 
+                self._x, self._y, 
+                self._width, 
+                self._height, 
+                self._angle
+            )
+        )
+     
+    def turn(self, angle, absolute = False):
+        if absolute:
+            self._angle = angle
+        else:  
+            self._angle += angle
+            
+        while 0 > self._angle < 360:
+            if self._angle > 360:
+                self._angle -= 360
+            elif self._angle < 0:
+                self._angle += 360
+                
+        self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height, self._angle))
+     
+    def scale(self, width, height):
+        self._width = width
+        self._height = height
+        pass
+    
+    def set_sprite(self, image_name: str):
+        self._image_path = Path(__file__).parent / Path('sprites') / Path(image_name)
+        self._multiprocessing_draw_queue.put(
+            (
+                self._name,             #0
+                self._image_path,       #1
+                self._x,                #2
+                self._y,                #3
+                self._width,            #4
+                self._height,           #5  
+                self._angle             #6
+            )
+        )
+        
     def wait(self, secounds):
         '''
         Runs a sleep comand pausing the file execution.
@@ -735,20 +809,6 @@ class Code_prosessor(multiprocessing.Process):
         print(random_num)
         return random_num
     
-    def turn(self, angle, absolute = False):
-        if absolute:
-            self._angle = angle
-        else:  
-            self._angle += angle
-            
-        while 0 > self._angle < 360:
-            if self._angle > 360:
-                self._angle -= 360
-            elif self._angle < 0:
-                self._angle += 360
-                
-        self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height, self._angle))
-    
     def print(self, string: str = '', time_delay: Optional[float] = 1):
         self._custom_event_queue.put((self._name, ('print'), (str(string), self._x, self._y, time_delay)))
         time.sleep(time_delay)
@@ -758,6 +818,23 @@ class Code_prosessor(multiprocessing.Process):
             return None
         else:
             return self._keypress_queue.get()
+
+    def on_hit(self, target):
+        self._custom_event_queue.put((self._name, ('on_hit'), target))
+        #time.sleep(0.004)
+        self._handle_event_value()
+        if self._on_hit:
+            self._on_hit = False
+            return True
+        else:
+            return False
+        
+    def _handle_event_value(self):
+        while not self._event_queue.empty():
+            event = self._event_queue.get()
+            if event == 'on_hit':
+                self._on_hit = True
+                
 class Add__str__func:
     def __init__(self, func):
         self.func = func
