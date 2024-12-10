@@ -99,7 +99,16 @@ class Button(Text):
     @property
     def sprite(self):
         return self._button_surface
+
+class Button_load_menue(Button):
+    def __init__(self, x, y, width, height, text, function, surface=None):
+        super().__init__(x, y, width, height, text, function, surface)
         
+    def test_button_press(self, coordinate):
+        if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
+            return self._function
+            
+            
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image_file, coordinate, width: Optional[int] = None, height: Optional[int] = None, sprite_rect = (0, 0, 1, 1)):
         super().__init__()

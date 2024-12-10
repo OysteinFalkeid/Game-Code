@@ -3,7 +3,7 @@ import multiprocessing
 import multiprocessing.context
 import multiprocessing.queues
 import pygame
-import imports.interfacec as interfacec
+import interfacec as interfacec
 from pathlib import Path
 import traceback
 from typing import Optional, Union
@@ -42,6 +42,8 @@ class Game:
         self._multiprocessing_draw_queue = multiprocessing.Queue(128)
         self._multiprocessing_draw_dict = {}
         self._custom_event_queue= multiprocessing.Queue(128)
+        
+        self.save: str = "save_1"
         
     def draw(self):
         while not self._multiprocessing_draw_queue.empty():
@@ -90,11 +92,11 @@ class Game:
                   
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
-        
+      
     def _append_file(self):
         file_name = f'code_file_{len(self._file_dict)}'
-        path = Path(__file__).parent.parent \
-            / Path('save') / Path('save_1') \
+        path = Path(__file__).parent \
+            / Path('save') / Path(self.save) \
             / Path(file_name + '.py')
             
         self._file_dict[file_name] = File_wiewer(
@@ -529,6 +531,7 @@ class Code_prosessor(multiprocessing.Process):
             width: float = 100, 
             height: float = 100, 
             angle: float = 0,
+            sprite: str = 'icon.png'
             
         ):
         super(Code_prosessor, self).__init__()
@@ -544,8 +547,7 @@ class Code_prosessor(multiprocessing.Process):
         self._time = 0.5
         self._steps = int(self._framerate * self._time)
         self._step_dist = int(200/self._steps)
-        print(self._framerate)
-        self._image_path = Path(__file__).parent / Path('sprites') / Path('icon.png')
+        self._image_path = Path(__file__).parent / Path('sprites') / Path(sprite)
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._multiprocessing_draw_queue.put(
             (
@@ -573,6 +575,8 @@ class Code_prosessor(multiprocessing.Process):
                         'move_to': Add__str__func(self.move_to),
                         'wait': Add__str__func(self.wait), 
                         'timer': Add__str__func(self.timer), 
+                        'scale': Add__str__func(self.scale),
+                        'set_sprite': Add__str__func(self.set_sprite),
                         'random': Add__str__func(self.random), 
                         'turn': Add__str__func(self.turn), 
                         'print': Add__str__func(self.print),
@@ -733,7 +737,17 @@ class Code_prosessor(multiprocessing.Process):
     def scale(self, width, height):
         self._width = width
         self._height = height
-        pass
+        self._multiprocessing_draw_queue.put(
+            (
+                self._name,             #0
+                self._image_path,       #1
+                self._x,                #2
+                self._y,                #3
+                self._width,            #4
+                self._height,           #5  
+                self._angle             #6
+            )
+        )
     
     def set_sprite(self, image_name: str):
         self._image_path = Path(__file__).parent / Path('sprites') / Path(image_name)
@@ -811,7 +825,7 @@ class Code_prosessor(multiprocessing.Process):
     
     def print(self, string: str = '', time_delay: Optional[float] = 1):
         self._custom_event_queue.put((self._name, ('print'), (str(string), self._x, self._y, time_delay)))
-        time.sleep(time_delay)
+        # time.sleep(time_delay)
     
     def keypress(self):
         if self._keypress_queue.empty():
@@ -821,7 +835,7 @@ class Code_prosessor(multiprocessing.Process):
 
     def on_hit(self, target):
         self._custom_event_queue.put((self._name, ('on_hit'), target))
-        #time.sleep(0.004)
+        time.sleep(0.006)
         self._handle_event_value()
         if self._on_hit:
             self._on_hit = False
