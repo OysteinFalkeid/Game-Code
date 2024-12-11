@@ -34,7 +34,6 @@ This could be implemented with a droppdown menue
 
 ## clean menues
 
-## game crashes uppon restarting inngame code. AssertionError: cannot start a process twice
 
 
 

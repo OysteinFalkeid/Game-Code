@@ -13,6 +13,8 @@ class Menue_controller:
         self._height = height
         
         self._save = ''
+        self.textmode = False
+        self.text = ''
         
         self._display_menue = 'main'
         
@@ -49,7 +51,6 @@ class Menue_controller:
                 lambda: pygame.event.post(pygame.event.Event(self._custom_event_dict['LOAD_MENUE'])),
             )
         
-    
     def draw(self):
         if self._display_menue == 'main':
             self.main_menue()
@@ -77,19 +78,46 @@ class Menue_controller:
         for i, save in enumerate(glob.glob(str(path) + "\\*\\" )):
             button_dict[os.path.basename(save[:-1])] = interfacec.Button_load_menue(
                 100, 
-                100 * i, 
-                self._width/4, 
-                self._height/8,
+                100 * i + 200, 
+                200, 
+                74,
                 os.path.basename(save[:-1]),
                 os.path.basename(save[:-1]),
             )
         
-        self._button_list = []
+        button_new_save = interfacec.Button(
+                10, 
+                10, 
+                200, 
+                75,
+                "new save",
+                lambda: self.new_save(),
+            )
+        
+        button_ass_text_field = interfacec.Button(
+                220, 
+                10, 
+                200, 
+                75,
+                self.text,
+                lambda: self.load_menue_text(),
+            )
+        
+        self._button_list = [button_new_save, button_ass_text_field]
         for button in button_dict:
             self._button_list.append(button_dict[button])
         
         for button in self._button_list:
             button.draw(self._surface)
+    
+    def load_menue_text(self):
+        self.textmode = True
+    
+    def new_save(self):
+        path = Path(__file__).parent / Path('save') / Path(self.text)
+        if not path.is_dir():
+            path.mkdir(parents=True, exist_ok=True)
+        self.textmode = False
     
     def get_save(self):
         save = self._save

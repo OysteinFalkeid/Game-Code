@@ -89,6 +89,12 @@ def main():
                         display_game = False
                         game.pause()
                         menue_controller.set_menue('main')
+                    elif menue_controller.textmode:
+                        if event.unicode != '':
+                            if event.key == pygame.K_BACKSPACE:
+                                menue_controller.text = menue_controller.text[:-1]
+                            else:
+                                menue_controller.text += event.unicode
                     elif game_mode == 'TEXT_MODE':
                         if event.unicode == '':
                              game.send_key_to_file_wiewer(event)
@@ -98,7 +104,8 @@ def main():
                         game.add_keystroke_to_queue(event.unicode)
             
             game.move_file_wiewer(pygame.mouse.get_rel())
-
+            game.send_mouse_pos_to_file(pygame.mouse.get_pos())
+            
             screen.fill(background_base_colour)
             
             menue_controller.draw()

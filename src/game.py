@@ -72,7 +72,7 @@ class Game:
                 if values in self._file_dict:
                     if self._multiprocessing_draw_dict[values][1] + self._multiprocessing_draw_dict[file][3] > self._multiprocessing_draw_dict[file][1] > self._multiprocessing_draw_dict[values][1] - self._multiprocessing_draw_dict[file][3]:
                         if self._multiprocessing_draw_dict[values][2] + self._multiprocessing_draw_dict[file][4] > self._multiprocessing_draw_dict[file][2] > self._multiprocessing_draw_dict[values][2] - self._multiprocessing_draw_dict[file][4]:
-                            self._file_dict[file].send_event_value('on_hit')
+                            self._file_dict[file].send_event_value(('on_hit', None))
                 else:
                     print(f'file {values} not found')
                     
@@ -125,6 +125,11 @@ class Game:
             if file.selected:
                 file.move_cursor(event)
     
+    def send_mouse_pos_to_file(self, coordinates):
+        # print(coordinates)
+        for file in self._file_dict.values():
+            file.send_event_value(('mouse_coords', coordinates))
+    
     def on_mouse_press(self, coordinate):
         for button in self._button_list:
             button.test_button_press(coordinate)
@@ -135,7 +140,6 @@ class Game:
                 self._file_dict[key] = self._file_dict.pop(key)
                 break
         
-    
     def move_file_wiewer(self, rel_coordinate):
         for file in self._file_dict.values():
             if file.movable:
@@ -173,7 +177,7 @@ class File_wiewer:
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._custom_event_queue = custom_event_queue
         self._keypress_queue = multiprocessing.Queue(4)
-        self._event_queue = multiprocessing.Queue(128)
+        self._event_queue = multiprocessing.Queue(60)
         self._code_prosessor = \
             Code_prosessor(
                 self._name, 
@@ -183,7 +187,6 @@ class File_wiewer:
                 self._keypress_queue,
                 self._event_queue,
             )
-        self._running = False
         
         self._button_play = \
             interfacec.Button(
@@ -383,7 +386,6 @@ class File_wiewer:
         self.save()
         self.kill()
         self._code_prosessor.start()
-        self._running = True
         
     def save(self):
         with open(self._path, 'w') as file:
@@ -392,8 +394,9 @@ class File_wiewer:
     def stop(self):
         self.kill()
     
-    def send_event_value(self, value):
-        self._event_queue.put(value)
+    def send_event_value(self, event):
+        if not self._event_queue.full():
+            self._event_queue.put(event)
     
     def text_edditer(self, keystroke: str):
         # Gets keystroces as unicode character and inserts these in the string representation of the file
@@ -501,9 +504,12 @@ class File_wiewer:
             
     def kill(self):
         print('kill')
-        if self._running:
+        try:
             self._code_prosessor.terminate()
             self._code_prosessor.join()
+        except:
+            pass
+        finally:
             self._code_prosessor = \
             Code_prosessor(
                     self._name, 
@@ -513,7 +519,6 @@ class File_wiewer:
                     self._keypress_queue,
                     self._event_queue,
                 )
-            self._running = False
         
     def join(self, values):
         self._code_prosessor.join()
@@ -578,6 +583,7 @@ class Code_prosessor(multiprocessing.Process):
         self._keypress_queue = keypress_queue
         self._event_queue = event_queue
         self._on_hit = False
+        self._mouse_coords = (0,0)
     
     def run(self):
         self._timer = time.time()
@@ -588,6 +594,7 @@ class Code_prosessor(multiprocessing.Process):
                 {
                     'move': Add__str__func(self.move), 
                     'move_to': Add__str__func(self.move_to),
+                    'move_to_cursor': Add__str__func(self.move_to_cursor),
                     'wait': Add__str__func(self.wait), 
                     'timer': Add__str__func(self.timer), 
                     'scale': Add__str__func(self.scale),
@@ -734,7 +741,16 @@ class Code_prosessor(multiprocessing.Process):
                 self._angle
             )
         )
-     
+    
+    def move_to_cursor(self, distance: int, time: float = None):
+        self._handle_event_value()
+        # print(self._mouse_coords)
+        relative_x = self._mouse_coords[0] - self._x
+        relative_y = self._mouse_coords[1] - self._y
+        angle = math.degrees(math.atan2(-relative_y, relative_x))
+        self.turn(angle, True)
+        self.move(distance, time)
+    
     def turn(self, angle, absolute = False):
         if absolute:
             self._angle = angle
@@ -859,8 +875,11 @@ class Code_prosessor(multiprocessing.Process):
         
     def _handle_event_value(self):
         while not self._event_queue.empty():
-            event = self._event_queue.get()
-            if event == 'on_hit':
+            print('test')
+            event, value = self._event_queue.get()
+            if event == 'mouse_coords':
+                self._mouse_coords = value
+            elif event == 'on_hit':
                 self._on_hit = True
                 
 class Add__str__func:
