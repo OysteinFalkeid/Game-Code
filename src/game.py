@@ -69,10 +69,13 @@ class Game:
                 start_time = time.time()
                 self._print_list.append((text_surface_list, (values[1], values[2]), values[3], start_time))
             if comand == 'on_hit':
-                if self._multiprocessing_draw_dict[values][1] + self._multiprocessing_draw_dict[file][3] > self._multiprocessing_draw_dict[file][1] > self._multiprocessing_draw_dict[values][1] - self._multiprocessing_draw_dict[file][3]:
-                    if self._multiprocessing_draw_dict[values][2] + self._multiprocessing_draw_dict[file][4] > self._multiprocessing_draw_dict[file][2] > self._multiprocessing_draw_dict[values][2] - self._multiprocessing_draw_dict[file][4]:
-                        self._file_dict[file].send_event_value('on_hit')
-                
+                if values in self._file_dict:
+                    if self._multiprocessing_draw_dict[values][1] + self._multiprocessing_draw_dict[file][3] > self._multiprocessing_draw_dict[file][1] > self._multiprocessing_draw_dict[values][1] - self._multiprocessing_draw_dict[file][3]:
+                        if self._multiprocessing_draw_dict[values][2] + self._multiprocessing_draw_dict[file][4] > self._multiprocessing_draw_dict[file][2] > self._multiprocessing_draw_dict[values][2] - self._multiprocessing_draw_dict[file][4]:
+                            self._file_dict[file].send_event_value('on_hit')
+                else:
+                    print(f'file {values} not found')
+                    
         
         for i, prints in enumerate(self._print_list):
             if prints[2] < time.time() - prints[3]:
@@ -165,6 +168,7 @@ class File_wiewer:
         self._coordinate = (self._x, self._y)
         
         self._text_surface = pygame.Surface((self._width, self._height))
+        
         self._custom_event_dict = custom_event_dict
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
         self._custom_event_queue = custom_event_queue
@@ -179,6 +183,7 @@ class File_wiewer:
                 self._keypress_queue,
                 self._event_queue,
             )
+        self._running = False
         
         self._button_play = \
             interfacec.Button(
@@ -376,9 +381,9 @@ class File_wiewer:
         
     def run_code(self):
         self.save()
-        if not self._code_prosessor.is_alive():
-            self.kill()
-            self._code_prosessor.start()
+        self.kill()
+        self._code_prosessor.start()
+        self._running = True
         
     def save(self):
         with open(self._path, 'w') as file:
@@ -495,11 +500,21 @@ class File_wiewer:
         self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
             
     def kill(self):
-        try:
-            self._code_prosessor.kill()
-        except:
-            pass
-    
+        print('kill')
+        if self._running:
+            self._code_prosessor.terminate()
+            self._code_prosessor.join()
+            self._code_prosessor = \
+            Code_prosessor(
+                    self._name, 
+                    self._path, 
+                    self._custom_event_queue, 
+                    self._multiprocessing_draw_queue,
+                    self._keypress_queue,
+                    self._event_queue,
+                )
+            self._running = False
+        
     def join(self, values):
         self._code_prosessor.join()
         self._code_prosessor = \
@@ -569,21 +584,21 @@ class Code_prosessor(multiprocessing.Process):
         try:
             with open(self._path, 'r') as file:
                 lines = file.read()
-                exec(lines, 
-                    {
-                        'move': Add__str__func(self.move), 
-                        'move_to': Add__str__func(self.move_to),
-                        'wait': Add__str__func(self.wait), 
-                        'timer': Add__str__func(self.timer), 
-                        'scale': Add__str__func(self.scale),
-                        'set_sprite': Add__str__func(self.set_sprite),
-                        'random': Add__str__func(self.random), 
-                        'turn': Add__str__func(self.turn), 
-                        'print': Add__str__func(self.print),
-                        'keypress': Add__str__func(self.keypress),
-                        'on_hit': Add__str__func(self.on_hit),
-                    }
-                )
+            exec(lines, 
+                {
+                    'move': Add__str__func(self.move), 
+                    'move_to': Add__str__func(self.move_to),
+                    'wait': Add__str__func(self.wait), 
+                    'timer': Add__str__func(self.timer), 
+                    'scale': Add__str__func(self.scale),
+                    'set_sprite': Add__str__func(self.set_sprite),
+                    'random': Add__str__func(self.random), 
+                    'turn': Add__str__func(self.turn), 
+                    'print': Add__str__func(self.print),
+                    'keypress': Add__str__func(self.keypress),
+                    'on_hit': Add__str__func(self.on_hit),
+                }
+            )
         except Exception as e:
             print(
                 f'##############################################################################\n'
@@ -820,7 +835,6 @@ class Code_prosessor(multiprocessing.Process):
             random_num = random_num*max_value
         if not float_value:
             random_num = int(random_num)
-        print(random_num)
         return random_num
     
     def print(self, string: str = '', time_delay: Optional[float] = 1):
