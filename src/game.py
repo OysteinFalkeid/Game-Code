@@ -728,7 +728,18 @@ class Code_prosessor(multiprocessing.Process):
                 )                
                 clock.tick(self._framerate)
     
-    def move_to(self, x, y):
+    def move_to(self, x: int, y: int):
+        '''
+        moves the sprite to the specified coordinates
+        
+        Args:
+            x (int): x coordinate
+            y (int): y coordinate
+        
+        Example:
+            >>> move_to(100,100)
+                The sprite telleports to coordinates 100x, 100y
+        '''
         self._x = x
         self._y = y
         self._multiprocessing_draw_queue.put(

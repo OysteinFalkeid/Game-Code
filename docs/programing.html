@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+  <style>
+    .indented {
+      margin-left: 20px;
+    }
+  </style>
 </head>
 
 <body>
@@ -29,38 +31,60 @@
 
       <h5>Args:</h5>
 
-      <div>
+      <div class="indented">
         distance (float, optional):
-        <div> Distance the sprite is moved. </div>
+        <div class="indented"> Distance the sprite is moved. </div>
       </div>
-      <div>
+      <div class="indented">
         time (float, optional):
-        <div> Time the sprite takes to move the spesified distance </div>
+        <div class="indented"> Time the sprite takes to move the spesified distance </div>
       </div>
-      <div>
+      <div class="indented">
         direction (str, optional):
-        <div> Direction the sprite is moved in. If None the sprite moves in the direction spessified by the turn() function </div>
+        <div class="indented"> Direction the sprite is moved in. If None the sprite moves in the direction spessified by the turn() function </div>
       </div>
 
       <h5>Examples:</h5>
 
-      <div>
+      <div class="indented">
         >>> move(distance=100, time=1, direction='rught')
-        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
+        <div class="indented"> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
       </div>
-      <div>
+      <div class="indented">
         >>> move(100, 1, 'rught')
-        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
+        <div class="indented"> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
       </div>
-      <div>
+      <div class="indented">
         >>> move(100, 1)
-        <div> Moves the sprite 100 pixels in the direction of the sprite for 1 a duration of 1 second. </div>
+        <div class="indented"> Moves the sprite 100 pixels in the direction of the sprite for 1 a duration of 1 second. </div>
       </div>
-      <div>
+      <div class="indented">
         >>> move(100)
-        <div> Moves the sprite 100 pixels instantaniusly. </div>
+        <div class="indented"> Moves the sprite 100 pixels instantaniusly. </div>
       </div>
     </div>
+  </p>
+
+  <p>
+    <h4> move_to </h4>
+    <div>
+      moves the sprite to the specified coordinates
+        
+      <h5> Args: </h5>
+      <div class="indented">
+        x (int): 
+        <div class="indented"> x coordinate </div>
+      </div>
+      <div class="indented">
+        y (int): 
+        <div class="indented"> y coordinate </div>
+      </div>
+        
+      <h5>Example:</h5>
+        <div class="indented">
+          >>> move_to(100,100)
+          <div class="indented">The sprite telleports to coordinates 100x, 100y</div>
+        </div>
   </p>
 </body>
 </html>

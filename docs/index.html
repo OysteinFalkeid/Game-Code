@@ -11,15 +11,18 @@
             font-family: Arial, sans-serif;
             display: flex;
             height: 100vh;
+            overflow: hidden;
         }
 
         .menu {
             width: 200px;
+            /* height: 100%; */
             background-color: #333;
             color: white;
             padding: 0;
             display: flex;
             flex-direction: column;
+            /* position: sticky; */
         }
 
         .menu h1 {
@@ -49,6 +52,13 @@
             flex-grow: 1;
             padding: 20px;
             background-color: #f4f4f4;
+            overflow-y: auto;
+            background: rgb(228, 228, 228); 
+            /* background: -webkit-linear-gradient(left, rgb(162, 176, 187) , rgb(118, 162, 196));
+            background: -o-linear-gradient(right, rgb(162, 176, 187), rgb(118, 162, 196)); 
+            background: -moz-linear-gradient(right, rgb(162, 176, 187), rgb(118, 162, 196)); 
+            background: linear-gradient(to right, rgb(162, 176, 187), rgb(118, 162, 196));  */
+
         }
 
         .main h1 {
@@ -69,7 +79,7 @@
     <div class="menu">
         <h1> Game-Code   </h1>
         <img class="icon" src="./images/icon.png" alt="icon">
-        <button onclick="loadContent('home.html')">Home-testingthepadj</button>
+        <button onclick="loadContent('home.html')">Home</button>
         <button onclick="loadContent('programing.html')">programing</button>
     </div>
     <div class="main" id="content">
