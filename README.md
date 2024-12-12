@@ -3,6 +3,7 @@
 
 this program is written in and runs in python.
 current version suport is python 3.12.6 other versions shold work
+More innformation on https://oysteinfalkeid.github.io/Game-Code/
 
 # ownership
 This project is created and oned by Øystein Falkeid.
