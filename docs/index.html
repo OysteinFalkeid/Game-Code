@@ -1,75 +1,72 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <!-- <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> -->
-  <style>
-    html { font-family: Helvetica; display: inline-block; margin-left: 20px;}
-    div {margin-left: 15px;}
-  </style>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Static Web Page</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
 
-<html>
-<head>
-  <title> Game-Code</title>
-  <link rel="icon" type="image/x-icon" href="./images/icon.png">
+        .menu {
+            width: 200px;
+            background-color: #333;
+            color: white;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 15px;
+            text-align: left;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .menu button:hover {
+            background-color: #555;
+        }
+
+        .main {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .main h1 {
+            margin-top: 0;
+        }
+    </style>
 </head>
 <body>
-  <h1> Game-Code <img src="./images/icon.png" alt="icon"> </h1>
-  <a href="https://github.com/OysteinFalkeid/Game-Code">Github repository</a>
-  <h2> Home page </h2>
-  <h3> Commands </h3>
-
-  <ul>
-      <li> move </li>
-      <li> move_to </li>
-      <li> move_to_cursor </li>
-      <li> wait </li>
-      <li> timer </li>
-      <li> scale </li>
-      <li> set_sprite </li>
-      <li> random </li>
-      <li> turn </li>
-      <li> print </li>
-  </ul>
-
-  <h4> move </h4>
-  <p>
-    <div>
-      Moves the sprite
-
-      <h5>Args:</h5>
-
-      <div>
-        distance (float, optional):
-        <div> Distance the sprite is moved. </div>
-      </div>
-      <div>
-        time (float, optional):
-        <div> Time the sprite takes to move the spesified distance </div>
-      </div>
-      <div>
-        direction (str, optional):
-        <div> Direction the sprite is moved in. If None the sprite moves in the direction spessified by the turn() function </div>
-      </div>
-
-      <h5>Examples:</h5>
-
-      <div>
-        >>> move(distance=100, time=1, direction='rught')
-        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
-      </div>
-      <div>
-        >>> move(100, 1, 'rught')
-        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
-      </div>
-      <div>
-        >>> move(100, 1)
-        <div> Moves the sprite 100 pixels in the direction of the sprite for 1 a duration of 1 second. </div>
-      </div>
-      <div>
-        >>> move(100)
-        <div> Moves the sprite 100 pixels instantaniusly. </div>
-      </div>
+    <div class="menu">
+        <button onclick="showContent('home')">Home</button>
+        <button onclick="showContent('about')">About</button>
+        <button onclick="showContent('contact')">Contact</button>
     </div>
-  </p>
+    <div class="main" id="content">
+        <h1>Welcome!</h1>
+        <p>Select an option from the menu to see more content.</p>
+    </div>
+
+    <script>
+        function showContent(section) {
+            const content = {
+                home: `<h1>Home</h1><p>Welcome to the homepage!</p>`,
+                about: `<h1>About</h1><p>This is the about section.</p>`,
+                contact: `<h1>Contact</h1><p>Feel free to contact us anytime.</p>`
+            };
+
+            document.getElementById('content').innerHTML = content[section] || `<h1>Error</h1><p>Content not found.</p>`;
+        }
+    </script>
 </body>
 </html>
