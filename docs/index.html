@@ -1,17 +1,73 @@
 <!DOCTYPE html><html>
 <head>
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <!-- <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> -->
   <style>
-    html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;}
+    /* html { font-family: Helvetica; display: inline-block; margin: 0px auto; text-align: center;} */
+    div {margin-left: 15px;}
   </style>
 </head>
 
 <html>
 <head>
-  <title> Server </title>
+  <title> Game-Code </title>
 </head>
 <body>
-  <p> Home page </p>
-  <p> This is a test page for a server to come</p>
+  <h1> Game-Code </h1>
+  <h2> Home page </h2>
+  <h3> Commands </h3>
+  
+  <ul>
+      <li> move </li>
+      <li> move_to </li>
+      <li> move_to_cursor </li>
+      <li> wait </li>
+      <li> timer </li>
+      <li> scale </li>
+      <li> set_sprite </li>
+      <li> random </li>
+      <li> turn </li>
+      <li> print </li>
+  </ul>
+
+  <h4> move </h4>
+  <p>
+    <div>
+      Moves the sprite
+
+      <h5>Args:</h5>
+
+      <div>
+        distance (float, optional):
+        <div> Distance the sprite is moved. </div>
+      </div>
+      <div>
+        time (float, optional):
+        <div> Time the sprite takes to move the spesified distance </div>
+      </div>
+      <div>
+        direction (str, optional):
+        <div> Direction the sprite is moved in. If None the sprite moves in the direction spessified by the turn() function </div>
+      </div>
+
+      <h5>Examples:</h5>
+
+      <div>
+        >>> move(distance=100, time=1, direction='rught')
+        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
+      </div>
+      <div>
+        >>> move(100, 1, 'rught')
+        <div> Moves the sprite 100 pixels to the right for a duration of 1 second. </div>
+      </div>
+      <div>
+        >>> move(100, 1)
+        <div> Moves the sprite 100 pixels in the direction of the sprite for 1 a duration of 1 second. </div>
+      </div>
+      <div>
+        >>> move(100)
+        <div> Moves the sprite 100 pixels instantaniusly. </div>
+      </div>
+    </div>
+  </p>
 </body>
 </html>
