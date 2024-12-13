@@ -1,15 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <style>
-    .indented {
-      margin-left: 20px;
-    }
-  </style>
-</head>
-
 <body>
-  <h3> Commands </h3>
+  <h2> Commands </h2>
 
   <ul>
       <li> move </li>
@@ -24,12 +14,12 @@
       <li> print </li>
   </ul>
 
-  <h4> move </h4>
+  <h4><span> move </span></h4>
   <p>
     <div>
       Moves the sprite
 
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
 
       <div class="indented">
         distance (float, optional):
@@ -40,7 +30,7 @@
         <div class="indented"> Direction the sprite is moved in. If None the sprite moves in the direction spessified by the turn() function </div>
       </div>
 
-      <h5>Examples:</h5>
+      <h5><span>Examples:</span></h5>
 
       <div class="indented">
         >>> move(distance=100, time=1, direction='rught')
@@ -56,11 +46,11 @@
   </p>
 
   <p>
-    <h4> move_to </h4>
+    <h4><span> move_to </span></h4>
     <div>
       moves the sprite to the specified coordinates
         
-      <h5> Args: </h5>
+      <h5><span> Args: </span></h5>
         <div class="indented">
           x (int): 
           <div class="indented"> x coordinate </div>
@@ -68,7 +58,7 @@
           <div class="indented"> y coordinate </div>
         </div>
         
-      <h5>Example:</h5>
+      <h5><span>Example:</span></h5>
         <div class="indented">
           >>> move_to(100,100)
           <div class="indented">The sprite telleports to coordinates 100x, 100y</div>
@@ -76,17 +66,17 @@
   </p>
 
   <p>
-    <h4> move_to_cursor </h4>
+    <h4><span> move_to_cursor </span></h4>
     <div>
       moves and rotates the sprite towards the cursor
 
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
         <div class="indented"> 
           distance (int): distance to move
           <div class="indented">time (float, optional): time to move. Defaults to None.</div>
         </div>
 
-      <h5>Example:</h5>
+      <h5><span>Example:</span></h5>
         <div class="indented">
           >>> move_to_cursor(100, 1)
           <div class="indented">The sprite rotates and moves 100 pixels towards the cursor over 1 second</div>
@@ -95,11 +85,11 @@
   </p>
   
   <p>
-    <h4> rotate </h4>
+    <h4><span> rotate </span></h4>
     <div>
       turnes the sprite eather by a relative or absolute angle
         
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
         <div class="indented">
           angle (int): 
           <div class="indented">angle to turn</div>
@@ -107,7 +97,7 @@
           <div class="indented">defines if the angle is absolute or relative. Defaults to False.</div>
         </div>
       
-      <h5>Example:</h5>
+      <h5><span>Example:</span></h5>
         <div class="indented">
             >>> turn(90)
             <div class="indented">The sprite turns 90 degrees rellative to current rotation</div>
@@ -118,11 +108,11 @@
   </p>
 
   <p>
-    <h4> scale </h4>
+    <h4><span> scale </span></h4>
     <div>
       changes the scale of the sprite
 
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
         <div class="indented">
           width (int): 
           <div class="indented">new width</div>
@@ -130,7 +120,7 @@
           <div class="indented">new height</div>
         </div>
 
-      <h5>Example:</h5>
+      <h5><span>Example:</span></h5>
         <div class="indented">
             >>> scale(100, 100)
             <div class="indented">The sprite is scaled to 100x100 pixels</div>
@@ -139,18 +129,18 @@
   </p>
 
   <p>
-    <h4> set_sprite </h4>
+    <h4><span> set_sprite </span></h4>
     <div>
       tries to find a sprite with image_name in the folder 'sprites' and sets it as the sprite
       if image has been loaded earlier the image is searched for in ram.
         
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
         <div class="indented">
         image_name (str): 
           <div class="indented">name of the sprite</div>
         </div>
 
-      <h5>Example:</h5>
+      <h5><span>Example:</span></h5>
         <div class="indented">
           >>> set_sprite('icon.png')
           <div class="indented"> The 'icon.png' image file is searched for and loaded as the new sprite.</div>
@@ -159,17 +149,17 @@
   </p>
 
   <p>
-    <h4> sleep </h4>
+    <h4><span> sleep </span></h4>
     <div>
       Runs a sleep comand pausing the file execution.
         
-      <h5>Args:</h5>
+      <h5><span>Args:</span></h5>
         <div class="indented">
           secounds (float): 
           <div class="indented">The amount of secounds to pause the file execution.</div>
         </div>
         
-      <h5>Examples:</h5>
+      <h5><span>Examples:</span></h5>
         <div class="indented">
           >>> sleep(1)
           <div class="indented">Pauses the program for 1 secound</div>
@@ -180,17 +170,17 @@
   </p>
 
   <p>
-    <h4> timer </h4>
+    <h4><span> timer </span></h4>
     <div>
       A timer returning time since timer start or resets the timer
 
-      <h5> Args: </h5>
+      <h5><span> Args: </span></h5>
         <div class="indented">
           reset (bool, optional):
           <div class="indented">If True, resets the timer.</div>
         </div>
 
-      <h5> Examples: </h5>
+      <h5><span> Examples: </span></h5>
       <div class="indented">
         >>> timer()
         <div class="indented">Returns the time since the timer was started</div>
@@ -201,11 +191,11 @@
   </p>
 
   <p>
-    <h4> random </h4>
+    <h4><span> random </span></h4>
     <div>
       Returns a random number.
 
-      <h5> Args: </h5>
+      <h5><span> Args: </span></h5>
         <div class="indented">
           min_value (float, optional):
           <div class="indented">The minimum value of the random number.</div>
@@ -215,7 +205,7 @@
           <div class="indented">If True, returns a float (desimal) value.</div>
         </div>
 
-      <h5> Examples: </h5>
+      <h5><span> Examples: </span></h5>
       <div class="indented">
         >>> random()
         <div class="indented">Returns a random number between 0 and 1. [0 or 1]</div>
@@ -228,11 +218,11 @@
   </p>
 
   <p>
-    <h4> print </h4>
+    <h4><span> print </span></h4>
     <div>
       prints text at the current sprite posistion
 
-      <h5> Args: </h5>
+      <h5><span> Args: </span></h5>
         <div class="indented">
           string (str, optional):
           <div class="indented">The text to print.</div>
@@ -240,7 +230,7 @@
           <div class="indented">The amount of secounds to wait before printing the next character.</div>
         </div>
 
-      <h5> Examples: </h5>
+      <h5><span> Examples: </span></h5>
       <div class="indented">
         >>> print('Hello World')
         <div class="indented">Prints 'Hello World' at the current sprite posistion the text lasts for 1 secound</div>
@@ -251,7 +241,7 @@
   </p>
 
   <p>
-    <h4> keypress </h4>
+    <h4><span> keypress </span></h4>
     <div>
       listens for a players keyboard innput
     <div></div>
@@ -260,7 +250,7 @@
   </p>
 
   <p>
-    <h4> on_hit </h4>
+    <h4><span> on_hit </span></h4>
     <div>
       returns True if the sprite of the file edditor spesified overlaps the current sprite.
       <div></div>
@@ -268,4 +258,3 @@
     </div>
   </p>
 </body>
-</html>

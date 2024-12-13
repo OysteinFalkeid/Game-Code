@@ -1,81 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, margin=0">
     <title> Game-Code</title>
     <link rel="icon" type="image/x-icon" href="./images/icon.png">
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .menu {
-            width: 200px;
-            /* height: 100%; */
-            background-color: #333;
-            color: white;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            /* position: sticky; */
-        }
-
-        .menu h1 {
-            background-color: #444;
-            color: white;
-            border: none;
-            padding: 15px;
-            text-align: center;
-            /* width: 100%; */
-        }
-
-        .menu button {
-            background-color: #444;
-            color: white;
-            border: none;
-            padding: 15px;
-            text-align: left;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .menu button:hover {
-            background-color: #555;
-        }
-
-        .main {
-            flex-grow: 1;
-            padding: 20px;
-            background-color: #f4f4f4;
-            overflow-y: auto;
-            background: rgb(228, 228, 228); 
-            /* background: -webkit-linear-gradient(left, rgb(162, 176, 187) , rgb(118, 162, 196));
-            background: -o-linear-gradient(right, rgb(162, 176, 187), rgb(118, 162, 196)); 
-            background: -moz-linear-gradient(right, rgb(162, 176, 187), rgb(118, 162, 196)); 
-            background: linear-gradient(to right, rgb(162, 176, 187), rgb(118, 162, 196));  */
-
-        }
-
-        .main h1 {
-            margin-top: 0;
-        }
-
-        .icon {
-            width: 64px;
-            height: 64px;
-            image-rendering: pixelated;
-            align-self: center;
-            margin-top: -10px;
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body onload="loadContent('home.html')">
+
+<body class="index" onload="loadContent('home.html')">
     <div class="menu">
         <h1> Game-Code   </h1>
         <img class="icon" src="./images/icon.png" alt="icon">
@@ -86,87 +17,5 @@
     <div class="main" id="content">
         <!-- Content will be loaded here dynamically -->
     </div>
-
-    <script>
-        function loadContent(file) {
-            fetch(file)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('content').innerHTML = `<h1>Error</h1><p>Could not load content.</p>`;
-                    console.error('Error loading content:', error);
-                });
-        }
-
-        (function() {
-        if (typeof fontSize === 'undefined') {
-            fontSize = 0
-        }
-        if (typeof addLines === 'undefined') {
-            addLines = true
-        }
-
-        changeCodeFontSize(fontSize);
-        addLineNumber(addLines);
-        })()
-
-        function addLineNumber(addLines) {
-            if (addLines === true) {
-                var pre = document.getElementsByTagName('pre')
-                for (var i = 0; i < pre.length; i++) {
-                    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>'
-                    var num = pre[i].innerHTML.split(/\n/).length
-                    for (var j = 0; j < num; j++) {
-                        var lineNum = pre[i].getElementsByTagName('span')[0]
-                        lineNum.innerHTML += '<span>' + (j + 1) + '</span>'
-                    }
-                }
-            }
-        }
-
-        function changeCodeFontSize(fontSize) {
-            if (fontSize == 0) { return }
-            var elements = document.getElementsByTagName('pre')
-            for (var i = 0; i < elements.length; i++) {
-                elements[i].style['font-size'] = fontSize + 'px'
-            }
-        }
-
-        function codeCopy(id) {
-            var element = document.getElementById(id);
-            var text = element.innerHTML;
-            text.select;
-            element.focus;
-
-            try {
-                copyCodeToClipboard(text, id);
-            } catch (err) {
-                console.error('Something went wrong to copy to clipboard', err);
-            }
-        }
-
-        function copyCodeToClipboard(text, id) {
-            var cb = navigator.clipboard;
-
-            if (!cb) {
-                console.warn('Re-try');
-                codeCopy(id);
-                return;
-            }
-
-            cb.writeText(text).then(function() {},
-                function(err) {
-                    console.error('Could not copy text: ', err)
-                });
-        }
-        
-    </script>
+    <script src="script.js"></script>
 </body>
-</html>
