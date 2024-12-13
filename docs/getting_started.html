@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        pre {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-left: 3px solid #f36d33;
+            color: #666;
+            page-break-inside: avoid;
+            font: normal normal 14px/16px "Courier New", Courier, Monospace;
+            line-height: 1.0;
+            margin-bottom: 1.6em;
+            max-width: 100%;
+            padding: .5em 1em;
+            display: block;
+            word-wrap: break-word;
+            margin-left: 30px;
+            overflow: auto;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            counter-reset: line;
+        }
+
+        pre:hover,
+        pre:focus {
+            border-left: 3px solid #338df3;
+        }
+
+        div.code {
+            position: relative;
+        }
+
+        pre+button {
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+
+        pre .line-number {
+            user-select: none;
+            float: left;
+            margin: 0 1em 0 -1em;
+            border-right: 1px solid;
+            text-align: right;
+        }
+
+        pre .line-number span {
+            display: block;
+            padding: 0 .5em 0 1em;
+        }
+
+        pre .cl {
+            display: block;
+            clear: both;
+        }
+
+        .codeButton {
+            background-color: transparent;
+            -moz-border-radius: 2px;
+            -webkit-border-radius: 2px;
+            border-radius: 2x;
+            border: 1px solid;
+            display: inline-block;
+            cursor: pointer;
+            color: #000;
+            font-family: Arial;
+            font-size: 14px;
+            padding: 2px 2px;
+            text-decoration: none;
+            margin: 2px 2px;
+        }
+
+        .codeButton:hover {
+            background-color: transparent;
+        }
+
+        .codeButton:active {
+            top: 1px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2> Getting Started </h2>
+
+    <p>the source files can be downloaded from github, using git or as a .zip file</p>
+    <a href="https://github.com/OysteinFalkeid/Game-Code">Github repository</a>
+
+    <div class="code">
+        <pre><span id="code_2">
+git clone https://github.com/OysteinFalkeid/Game-Code
+        </span></pre>
+        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+    </div>
+
+    <p>To run the code first install python 3 and run pip install from within the cloned repository</p>
+    <a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>
+    
+    <div class="code">
+        <pre><span id="code_2">
+pip install requirements.txt
+        </span></pre>
+        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+    </div>
+
+
+    <p>This will install all required pacages</p>
+
+    <p>To run the program from terminal</p>
+
+    <div class="code">
+        <pre><span id="code_2">
+python ./src/main.py
+        </span></pre>
+        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+    </div>
+
+    <P> To build a .exe install and run pyinstaller </P>
+
+    <div class="code">
+        <pre><span id="code_2">
+pip install pyinstaller
+        </span></pre>
+        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+    </div>
+
+    <p>Then run pyinstaler. On windows the aproriate paramaters for pyinstaller is</p>
+    <div class="code">
+        <pre><span id="code_2">
+pyinstaller --name "Game-Code" --contents-directory "internal" --add-data=".\src\save":".\save" --add-data=".\src\sprites":".\sprites" --add-data=".\src\Consolas.ttf":"." ./src/main.py
+        </span></pre>
+        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+    </div>
+
+    <p>This creates a folder "dist" containg the file "Game-Code.exe" and a "internal" folder containing all dependansies</p>
+</body>
+
+</html>

@@ -595,7 +595,7 @@ class Code_prosessor(multiprocessing.Process):
                     'move': Add__str__func(self.move), 
                     'move_to': Add__str__func(self.move_to),
                     'move_to_cursor': Add__str__func(self.move_to_cursor),
-                    'wait': Add__str__func(self.wait), 
+                    'sleep': Add__str__func(self.sleep), 
                     'timer': Add__str__func(self.timer), 
                     'scale': Add__str__func(self.scale),
                     'set_sprite': Add__str__func(self.set_sprite),
@@ -754,6 +754,17 @@ class Code_prosessor(multiprocessing.Process):
         )
     
     def move_to_cursor(self, distance: int, time: float = None):
+        '''
+        moves and rotates the sprite towards the cursor
+        
+        Args:
+            distance (int): distance to move
+            time (float, optional): time to move. Defaults to None.
+            
+        Example:
+            >>> move_to_cursor(100, 1)
+                The sprite rotates and moves 100 pixels towards the cursor over 1 second
+        '''
         self._handle_event_value()
         # print(self._mouse_coords)
         relative_x = self._mouse_coords[0] - self._x
@@ -763,6 +774,19 @@ class Code_prosessor(multiprocessing.Process):
         self.move(distance, time)
     
     def turn(self, angle, absolute = False):
+        '''
+        turnes the sprite eather by a relative or absolute angle
+        
+        Args:
+            angle (int): angle to turn
+            absolute (bool, optional): defines if the angle is absolute or relative. Defaults to False.
+        
+        Example:
+            >>> turn(90)
+                The sprite turns 90 degrees rellative to current rotation
+            >>> turn(90, True)
+                The sprite turns to 90 degrees rellative to the display
+        '''
         if absolute:
             self._angle = angle
         else:  
@@ -776,7 +800,18 @@ class Code_prosessor(multiprocessing.Process):
                 
         self._multiprocessing_draw_queue.put((self._name, self._image_path, self._x, self._y, self._width, self._height, self._angle))
      
-    def scale(self, width, height):
+    def scale(self, width: int, height: int):
+        '''
+        changes the scale of the sprite
+
+        Args:
+            width (int): new width
+            height (int): new height
+            
+        Example:
+            >>> scale(100, 100)
+                The sprite is scaled to 100x100 pixels
+        '''
         self._width = width
         self._height = height
         self._multiprocessing_draw_queue.put(
@@ -792,6 +827,17 @@ class Code_prosessor(multiprocessing.Process):
         )
     
     def set_sprite(self, image_name: str):
+        '''
+        tries to find a sprite with image_name in the folder 'sprites' and sets it as the sprite
+        if image has been loaded earlier the image is searched for in ram.
+        
+        Args:
+            image_name (str): name of the sprite
+            
+        Example:
+            >>> set_sprite('icon.png')
+                The 'icon.png' image file is searched for and loaded as the new sprite.
+        '''
         self._image_path = Path(__file__).parent / Path('sprites') / Path(image_name)
         self._multiprocessing_draw_queue.put(
             (
@@ -805,7 +851,7 @@ class Code_prosessor(multiprocessing.Process):
             )
         )
         
-    def wait(self, secounds):
+    def sleep(self, secounds):
         '''
         Runs a sleep comand pausing the file execution.
         
@@ -813,8 +859,10 @@ class Code_prosessor(multiprocessing.Process):
             secounds (float): The amount of secounds to pause the file execution.
         
         Examples:
-            >>> wait(1)
+            >>> sleep(1)
                 Pauses the program for 1 secound
+            >>> sleep(0.1)
+                Pauses the program for 0.1 secounds
         '''
         time.sleep(secounds)
     
@@ -865,18 +913,40 @@ class Code_prosessor(multiprocessing.Process):
         return random_num
     
     def print(self, string: str = '', time_delay: Optional[float] = 1):
+        '''
+        
+        
+        Args:
+            string (str, optional): The text to print.
+            time_delay (float, optional): The amount of secounds to wait before printing the next character.
+            
+        Examples:
+            >>> print('Hello World')
+                Prints 'Hello World' at the current sprite posistion the text lasts for 1 secound
+            >>> print('Hello World', 0.5)
+                Prints 'Hello World' at the current sprite posistion the text lasts for 0.5 secounds
+        '''
         self._custom_event_queue.put((self._name, ('print'), (str(string), self._x, self._y, time_delay)))
         # time.sleep(time_delay)
     
     def keypress(self):
+        '''
+        listens for a players keyboard innput
+        the keypress que stores the last 4 keys and returns the first key in the queue
+        '''
         if self._keypress_queue.empty():
             return None
         else:
             return self._keypress_queue.get()
 
     def on_hit(self, target):
+        '''
+        returns True if the sprite of the file edditor spesified overlaps the current sprite.
+        Due to multiprossesing this functionality currentleuy onley workes reliabley in one direction.
+        '''
         self._custom_event_queue.put((self._name, ('on_hit'), target))
-        time.sleep(0.006)
+        time.sleep(0.006) # allows the main code to try to execute leading to the some false negatives.
+        # The test will return correctley on the next frame. but the function neads to re runn
         self._handle_event_value()
         if self._on_hit:
             self._on_hit = False
