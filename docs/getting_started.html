@@ -88,19 +88,15 @@
     <a href="https://github.com/OysteinFalkeid/Game-Code">Github repository</a>
 
     <div class="code">
-        <pre><span id="code_2">
-git clone https://github.com/OysteinFalkeid/Game-Code
-        </span></pre>
-        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+        <pre><span id="code1">git clone https://github.com/OysteinFalkeid/Game-Code</span></pre>
+        <button class="codeButton" onclick="codeCopy('code1')">Copy</button>
     </div>
 
     <p>To run the code first install python 3 and run pip install from within the cloned repository</p>
     <a href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>
     
     <div class="code">
-        <pre><span id="code_2">
-pip install requirements.txt
-        </span></pre>
+        <pre><span id="code2">pip install requirements.txt</span></pre>
         <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
     </div>
 
@@ -110,27 +106,21 @@ pip install requirements.txt
     <p>To run the program from terminal</p>
 
     <div class="code">
-        <pre><span id="code_2">
-python ./src/main.py
-        </span></pre>
-        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+        <pre><span id="code3">python ./src/main.py</span></pre>
+        <button class="codeButton" onclick="codeCopy('code3')">Copy</button>
     </div>
 
     <P> To build a .exe install and run pyinstaller </P>
 
     <div class="code">
-        <pre><span id="code_2">
-pip install pyinstaller
-        </span></pre>
-        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+        <pre><span id="code4">pip install pyinstaller</span></pre>
+        <button class="codeButton" onclick="codeCopy('code4')">Copy</button>
     </div>
 
     <p>Then run pyinstaler. On windows the aproriate paramaters for pyinstaller is</p>
     <div class="code">
-        <pre><span id="code_2">
-pyinstaller --name "Game-Code" --contents-directory "internal" --add-data=".\src\save":".\save" --add-data=".\src\sprites":".\sprites" --add-data=".\src\Consolas.ttf":"." ./src/main.py
-        </span></pre>
-        <button class="codeButton" onclick="codeCopy('code2')">Copy</button>
+        <pre><span id="code5">pyinstaller --name "Game-Code" --contents-directory "internal" --add-data=".\src\save":".\save" --add-data=".\src\sprites":".\sprites" --add-data=".\src\Consolas.ttf":"." ./src/main.py</span></pre>
+        <button class="codeButton" onclick="codeCopy('code5')">Copy</button>
     </div>
 
     <p>This creates a folder "dist" containg the file "Game-Code.exe" and a "internal" folder containing all dependansies</p>
