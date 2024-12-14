@@ -73,7 +73,7 @@ class Menue_controller:
         self._button_list = []
     
     def load_menue(self):
-        path = Path(__file__).parent / Path('save')
+        path = Path(__file__).parent / Path('saves')
         button_dict = {}
         for i, save in enumerate(glob.glob(str(path) + "\\*\\" )):
             button_dict[os.path.basename(save[:-1])] = interfacec.Button_load_menue(
@@ -114,7 +114,7 @@ class Menue_controller:
         self.textmode = True
     
     def new_save(self):
-        path = Path(__file__).parent / Path('save') / Path(self.text)
+        path = Path(__file__).parent / Path('savea') / Path(self.text)
         if not path.is_dir():
             path.mkdir(parents=True, exist_ok=True)
         self.textmode = False

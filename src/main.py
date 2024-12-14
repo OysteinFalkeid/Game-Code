@@ -15,6 +15,8 @@ from pathlib import Path
 def main():
     # pygame setup
     pygame.init()
+    pygame.mixer.init()
+    
     print('\n\n')
     clock = pygame.time.Clock()
     #defines if the game is running or not. when set to 0 or False the game closes
@@ -135,6 +137,7 @@ def main():
         print(f'Game crashed {e}\n\n{traceback.format_exc()}')
     finally:
         pygame.quit()
+        pygame.mixer.quit()
         game.kill()
         print('Exit')
 

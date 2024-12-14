@@ -60,15 +60,18 @@ class Game:
             file, comand, values = self._custom_event_queue.get()
             if comand == 'end':
                 self._file_dict[file].join(self._multiprocessing_draw_dict[file])
-            if comand == 'print':
+            elif comand == 'print':
                 self._font =  pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 24)
                 string: str = values[0]
                 string_list = string.replace('\t', '    ').split('\n')
                 text_surface_list = [self._font.render(string, True, 'black') for string in string_list]
-                
                 start_time = time.time()
                 self._print_list.append((text_surface_list, (values[1], values[2]), values[3], start_time))
-            if comand == 'on_hit':
+            elif comand == 'sound':
+                sound = self.load_sound(values[0]) # path
+                pygame.mixer.music.set_volume(values[1]) # volume
+                sound.play()
+            elif comand == 'on_hit':
                 if values in self._file_dict:
                     if self._multiprocessing_draw_dict[values][1] + self._multiprocessing_draw_dict[file][3] > self._multiprocessing_draw_dict[file][1] > self._multiprocessing_draw_dict[values][1] - self._multiprocessing_draw_dict[file][3]:
                         if self._multiprocessing_draw_dict[values][2] + self._multiprocessing_draw_dict[file][4] > self._multiprocessing_draw_dict[file][2] > self._multiprocessing_draw_dict[values][2] - self._multiprocessing_draw_dict[file][4]:
@@ -99,7 +102,7 @@ class Game:
     def _append_file(self):
         file_name = f'code_file_{len(self._file_dict)}'
         path = Path(__file__).parent \
-            / Path('save') / Path(self.save) \
+            / Path('saves') / Path(self.save) \
             / Path(file_name + '.py')
             
         self._file_dict[file_name] = File_wiewer(
@@ -148,6 +151,10 @@ class Game:
     @functools.lru_cache(maxsize=128)
     def load_image(self, path):
         return pygame.image.load(path)
+    
+    @functools.lru_cache(maxsize=128)
+    def load_sound(self, path):
+        return pygame.mixer.Sound(path)
     
     def pause(self):
         self._button_list = []
@@ -555,6 +562,7 @@ class Code_prosessor(multiprocessing.Process):
             
         ):
         super(Code_prosessor, self).__init__()
+        
         self._name = name
         self._path = path
         self._x = x
@@ -604,6 +612,7 @@ class Code_prosessor(multiprocessing.Process):
                     'print': Add__str__func(self.print),
                     'keypress': Add__str__func(self.keypress),
                     'on_hit': Add__str__func(self.on_hit),
+                    'play_sound': Add__str__func(self.play_sound),
                 }
             )
         except Exception as e:
@@ -944,7 +953,7 @@ class Code_prosessor(multiprocessing.Process):
         returns True if the sprite of the file edditor spesified overlaps the current sprite.
         Due to multiprossesing this functionality currentleuy onley workes reliabley in one direction.
         '''
-        self._custom_event_queue.put((self._name, ('on_hit'), target))
+        self._custom_event_queue.put((self._name, 'on_hit', target))
         time.sleep(0.006) # allows the main code to try to execute leading to the some false negatives.
         # The test will return correctley on the next frame. but the function neads to re runn
         self._handle_event_value()
@@ -962,6 +971,17 @@ class Code_prosessor(multiprocessing.Process):
                 self._mouse_coords = value
             elif event == 'on_hit':
                 self._on_hit = True
+            
+    def play_sound(self, sound_file: str, volume: float = 1):
+        '''
+        plays a sound file
+        '''
+        path = Path(__file__).parent/ Path('sounds') / Path(sound_file)
+        self._custom_event_queue.put((self._name, 'sound', (path, volume)))
+        
+            
+            
+            
                 
 class Add__str__func:
     def __init__(self, func):
