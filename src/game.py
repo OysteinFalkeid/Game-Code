@@ -16,7 +16,7 @@ import re
 
 
 class Game:
-    def __init__(self, surface: pygame.Surface, width = 0, height = 0, custom_event_dict: dict[str, pygame.event.Event] = {}):
+    def __init__(self, surface: pygame.Surface, width , height , scale_factor, custom_event_dict: dict[str, pygame.event.Event] = {}):
         self._width = width
         self._height = height
         self._surface = surface
@@ -25,15 +25,7 @@ class Game:
         self._print_list = []
         self._file_dict: dict[str, File_wiewer] = {}
         
-        self._button_new_file = \
-            interfacec.Button(
-                self._width/32, 
-                self._height/32, 
-                width/4, 
-                height/8, 
-                "New file",
-                lambda: self._append_file(), 
-            )
+        self.scale(scale_factor)
         
         self._button_list: list[interfacec.Button] = [self._button_new_file]
         
@@ -95,7 +87,21 @@ class Game:
             
         for file in self._file_dict.values():
             file.draw(self._surface)
-                  
+    
+    def scale(self, scale_factor):
+        self._scale_factor = scale_factor
+        
+        self._button_new_file = \
+            interfacec.Button(
+                math.floor(self._scale_factor * 20), 
+                math.floor(self._scale_factor * 20),
+                math.floor(self._scale_factor * 100), 
+                math.floor(self._scale_factor * 40),  
+                "New file",
+                math.floor(self._scale_factor * 16),
+                lambda: self._append_file(), 
+            )
+                   
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
       
@@ -199,6 +205,7 @@ class File_wiewer:
             interfacec.Button(
                 0, 0, 64, 32, 
                 "play",
+                11,
                 lambda: self.run_code(), 
             )
         
@@ -206,6 +213,7 @@ class File_wiewer:
             interfacec.Button(
                 64, 0, 64, 32, 
                 "save",
+                11,
                 lambda: self.save(), 
             )
         
@@ -213,6 +221,7 @@ class File_wiewer:
             interfacec.Button(
                 128, 0, 64, 32,
                 'stop',
+                11,
                 lambda: self.stop(),
             )
         self.selected = False
@@ -259,6 +268,7 @@ class File_wiewer:
         self._cursor_index = 0
         self._cursor_line = 0
         self._text_list_index = 0
+        self._draw_cursor_counter = 0
         
     def draw(self, surface: pygame.Surface):
         self._text_lines = []
@@ -369,7 +379,10 @@ class File_wiewer:
         self._draw_cursor()
         surface.blit(self._text_surface, self._coordinate)
         # raise KeyboardInterrupt
-                
+    
+    def scale(self, scale_factor):
+        pass
+               
     def test_file_select(self, coordinate):
         if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
             self.selected = True
@@ -377,10 +390,30 @@ class File_wiewer:
             self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             self._button_stop.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
-            if self._y < coordinate[1] < self._y + 32:
+            
+            if self._y < coordinate[1] < self._y + 32: # top bar for mooving the window
                 self.movable = True
             else:
                 self.movable = False
+               
+                relative_x = coordinate[0] - self._x
+                relative_y = coordinate[1] - self._y
+                
+                self._cursor_line = (relative_y-40)//20
+                if self._cursor_line > len(self._text_lines):
+                    self._cursor_line = len(self._text_lines)
+                
+                self._cursor_index = (relative_x-35)//11
+                if self._cursor_index > len(self._text_lines[self._cursor_line]):
+                    self._cursor_index = len(self._text_lines[self._cursor_line])
+                
+                index = 0 
+                for i, line in enumerate(self._text_lines):
+                        if i+1 > self._cursor_line:
+                            break
+                        index += len(line) + 1
+                self._text_list_index = index + self._cursor_index
+                
             return True
         else:
             if self.selected:
@@ -390,21 +423,42 @@ class File_wiewer:
             return False
         
     def run_code(self):
+        self.selected = False
+        pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
+        self.movable = False
         self.save()
         self.kill()
         self._code_prosessor.start()
         
     def save(self):
+        self.selected = False
+        pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
+        self.movable = False
         with open(self._path, 'w') as file:
             file.write(''.join(self._text_list))
     
     def stop(self):
+        self.selected = False
+        pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
+        self.movable = False
         self.kill()
     
     def send_event_value(self, event):
         if not self._event_queue.full():
             self._event_queue.put(event)
     
+    def add_keystroke_to_queue(self, keystroke:str):
+        if self._code_prosessor.is_alive():
+            if not self._keypress_queue.full():
+                self._keypress_queue.put(keystroke)
+            else:
+                self._keypress_queue.get()
+                self._keypress_queue.put(keystroke)
+        
+    def move_text_edditer(self, rel_coordinate):
+        if pygame.mouse.get_pressed(3)[0]:
+            self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
+            
     def text_edditer(self, keystroke: str):
         # Gets keystroces as unicode character and inserts these in the string representation of the file
         # both the index of the string and the position of the cursor is changed
@@ -412,8 +466,6 @@ class File_wiewer:
         #some keyes do not have a asci representation and to remove buggs this if statement i pased
         if keystroke == '':
             pass
-        # the backspace button has to both delete indexes and move the cursor. if a newline character 
-        # is deleted the cursor haas to move upp one line
         elif keystroke == '\x08': # backspace
             # if the cursor is not at index 0 the function can delete items without causing out of 
             # bound error
@@ -432,17 +484,16 @@ class File_wiewer:
                     #the self._text_lines list has not been updated meaning we can use the lengt to 
                     # determine the corect position of the cursor after deleting a newline character
                     self._cursor_index = len(self._text_lines[self._cursor_line])
-        # Enter is used to add a newline to the dokkument          
-        elif keystroke == '\r':
+        elif keystroke == '\x7f': # delete
+            if self._text_list_index < len(self._text_list):
+                self._text_list.pop(self._text_list_index)    
+        elif keystroke == '\r': # enter
             self._text_list.insert(self._text_list_index, '\n')
             self._text_list_index += 1
             # the cursor has to be moved down one line and back to index 0
             self._cursor_index = 0
             self._cursor_line += 1
-        #every other char is simly printed to the dokument. 
-        #This means that button presses like delete or CapsLock will be printed
-        #More finetuneing neaded
-        elif keystroke == '\t':
+        elif keystroke == '\t': # tab
             for _ in range(4):
                 self._text_list.insert(self._text_list_index, ' ')
                 self._text_list_index += 1
@@ -451,18 +502,6 @@ class File_wiewer:
             self._text_list.insert(self._text_list_index, keystroke)
             self._text_list_index += 1
             self._cursor_index += 1 
-            
-    def add_keystroke_to_queue(self, keystroke:str):
-        if self._code_prosessor.is_alive():
-            if not self._keypress_queue.full():
-                self._keypress_queue.put(keystroke)
-            else:
-                self._keypress_queue.get()
-                self._keypress_queue.put(keystroke)
-        
-    def move_text_edditer(self, rel_coordinate):
-        if pygame.mouse.get_pressed(3)[0]:
-            self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
     
     def move_cursor(self, event):
         if event.key == pygame.K_UP:
@@ -505,9 +544,26 @@ class File_wiewer:
                     self._cursor_line -= 1
                     self._cursor_index = len(self._text_lines[self._cursor_line])
                     self._text_list_index -= 1
+        
+        elif event.key == pygame.K_HOME:
+            self._text_list_index -= self._cursor_index
+            self._cursor_index = 0
+            self._text_list_index = 0
             
+        elif event.key == pygame.K_END:
+            print('end')
+            self._text_list_index += len(self._text_lines[self._cursor_line]) - self._cursor_index
+            self._cursor_index = len(self._text_lines[self._cursor_line])
+        
     def _draw_cursor(self):
-        self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
+        if self._draw_cursor_counter < 40:
+            self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
+            self._draw_cursor_counter += 1
+        else:
+            self._draw_cursor_counter += 1
+            
+        if self._draw_cursor_counter > 80:
+            self._draw_cursor_counter = 0
             
     def kill(self):
         print('kill')
@@ -979,10 +1035,7 @@ class Code_prosessor(multiprocessing.Process):
         path = Path(__file__).parent/ Path('sounds') / Path(sound_file)
         self._custom_event_queue.put((self._name, 'sound', (path, volume)))
         
-            
-            
-            
-                
+                            
 class Add__str__func:
     def __init__(self, func):
         self.func = func

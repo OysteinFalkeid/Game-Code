@@ -8,6 +8,33 @@ import game as game_controller
 import multiprocessing
 import time
 from pathlib import Path
+import math
+
+
+import os
+import platform
+import ctypes
+
+def maximize_window():
+    """
+    Maximize the Pygame window based on the operating system.
+    """
+    hwnd = pygame.display.get_wm_info()["window"]
+    system = platform.system()
+
+    if system == 'Windows':
+        ctypes.windll.user32.ShowWindow(hwnd, 3)  # SW_MAXIMIZE
+    elif system == 'Linux':
+        os.system(f"wmctrl -i -r {hwnd} -b add,maximized_vert,maximized_horz")
+    elif system == 'Darwin':  # macOS
+        os.system(f"""
+        osascript -e 'tell application "System Events" to set the position of windows of application "Python" to {{0, 0}}'
+        osascript -e 'tell application "System Events" to set the size of windows of application "Python" to {{1920, 1080}}'
+        """)
+    else:
+        # Fallback: Simulate maximized window
+        info = pygame.display.Info()
+        pygame.display.set_mode((info.current_w, info.current_h), pygame.RESIZABLE)
     
 # Define a custom sprite class
 
@@ -17,20 +44,22 @@ def main():
     pygame.init()
     pygame.mixer.init()
     
-    print('\n\n')
+    print('\n')
     clock = pygame.time.Clock()
     #defines if the game is running or not. when set to 0 or False the game closes
     running = True
     
-    display_info = pygame.display.Info()
-    
     #the size of the screen, width and hight can be used insted off caling get_screen_width() ...
-    size = width, height = display_info.current_w/2, display_info.current_h/2
+    size = pygame.display.get_desktop_sizes()[0]
+    size = width, height = size[0]/1.5, size[1]/1.5
+    scale_factor = min(width, height)/480
     #The colour to set the screen to between every frame.
     background_base_colour = 30, 63, 90
-    screen = pygame.display.set_mode(size, pygame.RESIZABLE)
+    screen = pygame.display.set_mode(size, flags=(pygame.RESIZABLE), depth=8)
     pygame.display.set_caption('Game Code', 'Game Code')
     pygame.display.set_icon(pygame.image.load((Path(__file__).parent / Path('sprites') / Path('icon.png'))))
+    
+    maximize_window()
     
     PLAY = pygame.event.custom_type()
     TEXT_MODE = pygame.event.custom_type()
@@ -45,18 +74,23 @@ def main():
     }
     game_mode = 'GAME_MODE'
     
-    game = game_controller.Game(screen, width, height, custom_event_dict)
+    game = game_controller.Game(screen, width, height, scale_factor, custom_event_dict)
     #the game is activated via the main menue. where it is set to try to render the game
     display_game = False
     
     #the debugger is an ingame displayer 
     debug = True
     
-    fps_displayer = interfacec.Text(0,0,width/16, height/16, 'None', colour='white')
+    fps_displayer = interfacec.Text(
+        math.floor(scale_factor*20),math.floor(scale_factor*8),
+        0,0,
+        'None', 
+        math.floor(scale_factor*8),
+        colour='white'
+    )
 
-    menue_controller = menues.Menue_controller(screen, size, width, height, custom_event_dict)
+    menue_controller = menues.Menue_controller(screen, scale_factor, custom_event_dict)
     
-
     try:
         while running:
             
@@ -87,7 +121,9 @@ def main():
                     menue_controller.set_menue('load_menue')
                            
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                    if event.key == pygame.K_F11:
+                        pygame.display.toggle_fullscreen() 
+                    elif event.key == pygame.K_ESCAPE:
                         display_game = False
                         game.pause()
                         menue_controller.set_menue('main')
@@ -101,9 +137,20 @@ def main():
                         if event.unicode == '':
                              game.send_key_to_file_wiewer(event)
                         else:
+                            print(repr(event.unicode))
                             game.eddit_file(event.unicode)
                     else:
                         game.add_keystroke_to_queue(event.unicode)
+                
+                elif event.type == pygame.VIDEORESIZE:
+                     
+                    size = width, height = size = event.w, event.h
+                    scale_factor = min(width, height)/480
+                    fps_displayer.scale(math.floor(scale_factor * 8))
+                    menue_controller.scale(scale_factor)
+                    game.scale(scale_factor)
+                    # menue_controller.set_size(size, width, height)
+                    # game.set_size(size, width, height)
             
             game.move_file_wiewer(pygame.mouse.get_rel())
             game.send_mouse_pos_to_file(pygame.mouse.get_pos())
