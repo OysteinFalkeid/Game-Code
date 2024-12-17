@@ -36,7 +36,11 @@
 
     <p>Then run pyinstaler. On windows the aproriate paramaters for pyinstaller is</p>
     <div class="code">
-        <pre><span id="code5">C:\Users\Oyste\AppData\Local\Programs\Python\Python312\Scripts\pyinstaller.exe --noconfirm --name "Game-Code" --contents-directory "internal" --add-data=".\src\saves":".\saves" --add-data=".\src\sprites":".\sprites" --add-data=".\src\sounds":".\sounds" --add-data=".\src\Consolas.ttf":"." ./src/main.py</span></pre>
+        <pre><span id="code5">pyinstaller ^
+    --noconfirm --name "Game-Code" --contents-directory "internal" ^
+    --add-data=".\src\saves":".\saves" --add-data=".\src\sprites":".\sprites" ^
+    --add-data=".\src\sounds":".\sounds" --add-data=".\src\Consolas.ttf":"." ^
+    ./src/main.py</span></pre>
         <button class="codeButton" onclick="codeCopy('code5')">Copy</button>
     </div>
 
