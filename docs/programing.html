@@ -12,6 +12,9 @@
       <li> random </li>
       <li> turn </li>
       <li> print </li>
+      <li> keypress </li>
+      <li> on_hit </li>
+      <li> play_sound </li>
   </ul>
 
   <h4><span> move </span></h4>
@@ -255,6 +258,29 @@
       returns True if the sprite of the file edditor spesified overlaps the current sprite.
       <div></div>
       Due to multiprossesing this functionality currentleuy onley workes reliabley in one direction.
+    </div>
+  </p>
+
+  <p>
+    <h4><span> play_sound </span></h4>
+    <div>
+      plays a sound file
+
+      <h5><span> Args: </span></h5>
+        <div class="indented">
+          sound_file (str):
+          <div class="indented">The name of the sound file to play.</div>
+          volume (float, optional):
+          <div class="indented">The volume of the sound.</div>
+        </div>
+
+      <h5><span> Examples: </span></h5>
+      <div class="indented">
+        >>> play_sound('jump.wav')
+        <div class="indented">Plays the sound file 'thump.mp3' volume of 1</div>
+        >>> play_sound('jump.wav', 0.5)
+        <div class="indented">Plays the sound file 'thump.mp3' volume of 0.5</div>
+      </div>
     </div>
   </p>
 </body>

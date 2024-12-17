@@ -1031,6 +1031,16 @@ class Code_prosessor(multiprocessing.Process):
     def play_sound(self, sound_file: str, volume: float = 1):
         '''
         plays a sound file
+        
+        Args:
+            sound_file (str): The name of the sound file to play.
+            volume (float, optional): The volume of the sound.
+        
+        Examples:
+            >>> play_sound('jump.wav')
+                Plays the sound file 'thump.mp3' volume of 1
+            >>> play_sound('jump.wav', 0.5)
+                Plays the sound file 'thump.mp3' volume of 0.5
         '''
         path = Path(__file__).parent/ Path('sounds') / Path(sound_file)
         self._custom_event_queue.put((self._name, 'sound', (path, volume)))
