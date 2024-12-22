@@ -149,8 +149,6 @@ def main():
                     fps_displayer.scale(math.floor(scale_factor * 8))
                     menue_controller.scale(scale_factor)
                     game.scale(scale_factor)
-                    # menue_controller.set_size(size, width, height)
-                    # game.set_size(size, width, height)
             
             game.move_file_wiewer(pygame.mouse.get_rel())
             game.send_mouse_pos_to_file(pygame.mouse.get_pos())

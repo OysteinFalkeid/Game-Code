@@ -27,8 +27,6 @@ class Game:
         
         self.scale(scale_factor)
         
-        self._button_list: list[interfacec.Button] = [self._button_new_file]
-        
         self._custom_event_dict = custom_event_dict
         
         self._multiprocessing_draw_queue = multiprocessing.Queue(128)
@@ -101,7 +99,12 @@ class Game:
                 math.floor(self._scale_factor * 16),
                 lambda: self._append_file(), 
             )
-                   
+        
+        self._button_list: list[interfacec.Button] = [self._button_new_file]
+        
+        for file in self._file_dict:
+            self._file_dict[file].scale(self._scale_factor)  
+            
     def _multiprocessing_draw_queue_handler(self, values: tuple):
         self._multiprocessing_draw_dict[values[0]] = (values[1], values[2], values[3], values[4], values[5], values[6])
       
@@ -114,6 +117,7 @@ class Game:
         self._file_dict[file_name] = File_wiewer(
             file_name, 
             path, 
+            self._scale_factor,
             self._custom_event_dict, 
             self._multiprocessing_draw_queue, 
             self._custom_event_queue
@@ -173,18 +177,17 @@ class Game:
             file.kill()   
         
 class File_wiewer:
-    def __init__(self, name, path, custom_event_dict, multiprocessing_draw_queue, custom_event_queue):
+    def __init__(self, name, path, scale_factor, custom_event_dict, multiprocessing_draw_queue, custom_event_queue):
         self._path = path
         self._name = name
+        self._scale_factor = scale_factor
         
-        self._x = 100
-        self._y = 100
-        self._width = 1000
-        self._height = 1000
+        self._x = math.floor(self._scale_factor * 100)
+        self._y = math.floor(self._scale_factor * 100)
+        self._width = math.floor(self._scale_factor * 100)
+        self._height = math.floor(self._scale_factor * 100)
         self._rectvalue = [0, 0, self._width, self._height]
         self._coordinate = (self._x, self._y)
-        
-        self._text_surface = pygame.Surface((self._width, self._height))
         
         self._custom_event_dict = custom_event_dict
         self._multiprocessing_draw_queue = multiprocessing_draw_queue
@@ -201,29 +204,7 @@ class File_wiewer:
                 self._event_queue,
             )
         
-        self._button_play = \
-            interfacec.Button(
-                0, 0, 64, 32, 
-                "play",
-                11,
-                lambda: self.run_code(), 
-            )
         
-        self._button_save = \
-            interfacec.Button(
-                64, 0, 64, 32, 
-                "save",
-                11,
-                lambda: self.save(), 
-            )
-        
-        self._button_stop = \
-            interfacec.Button(
-                128, 0, 64, 32,
-                'stop',
-                11,
-                lambda: self.stop(),
-            )
         self.selected = False
         self.movable = False
         if not Path.is_file(self._path):
@@ -231,10 +212,9 @@ class File_wiewer:
                 pass
         with open(self._path, 'r') as file:
             self._text_list = list(file.read())
+        self._text_list_old = None
             
-        self._text_surface = pygame.Surface((self._width, self._height))
         self._text_lines: list[str] = []
-        self._font= pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), 20)
         
         # RegEx for finding and colouring words in the draw function
         keywords = [
@@ -264,114 +244,176 @@ class File_wiewer:
         
         self._coment_regex = re.compile(r'#.*')
         
-        self._cursor = self._font.render('|', True, 'white')
+        self.scale(self._scale_factor)
         self._cursor_index = 0
         self._cursor_line = 0
         self._text_list_index = 0
         self._draw_cursor_counter = 0
         
     def draw(self, surface: pygame.Surface):
-        self._text_lines = []
-        text_line = ''
-        for text in self._text_list:
-            if text == '\n':
-                self._text_lines.append(text_line)
-                text_line = ''
-            else:
-                text_line += text
-        self._text_lines.append(text_line)
-        text_line = ''
         
-        #setting a adaptive bounding bow for the text edditor.
-        # every character is 11 pixels wide at a font size of 20
-        # there is a 40 pixel gap for numbering and border
-        # and there is a 10 pixel gap for border and breething room
-        self._width = max(max([len(line) for line in self._text_lines]), 20)* 11 + 40 + 10
-        # the same applies for hight altho a 20 pixel spasing is suficient.
-        self._rectvalue[2] = self._width
-        self._height = len(self._text_lines) * 20 + 40 + 10
-        self._rectvalue[3] = self._height
-        self._text_surface = pygame.transform.scale(self._text_surface, (self._width+4, self._height+4))
-        pygame.draw.rect(self._text_surface, (0,0,0), (self._x, self._y, self._width+4, self._height+4))
-        pygame.draw.rect(self._text_surface, (170,170,170), (2, 2, self._width, self._height))
-        pygame.draw.rect(self._text_surface, (15, 48, 75), (0, 0, self._width, 32))
+        if self._text_list != self._text_list_old:
+            
+            self._font= pygame.font.Font(Path(__file__).parent / Path('Consolas.ttf'), math.floor(self._scale_factor * 20))
+            self._cursor = self._font.render('|', True, 'white')
+        
+            self._text_lines = []
+            text_line = ''
+            for text in self._text_list:
+                if text == '\n':
+                    self._text_lines.append(text_line)
+                    text_line = ''
+                else:
+                    text_line += text
+            self._text_lines.append(text_line)
+            text_line = ''
+            
+            #setting a adaptive bounding bow for the text edditor.
+            # every character is 11 pixels wide at a font size of 20
+            # there is a 40 pixel gap for numbering and border
+            # and there is a 10 pixel gap for border and breething room
+            self._width = max(max([len(line) for line in self._text_lines]), 20)* 11 + 40 + 10
+            # the same applies for hight altho a 20 pixel spasing is suficient.
+            self._rectvalue[2] = self._width
+            self._height = len(self._text_lines) * 20 + 40 + 10
+            self._rectvalue[3] = self._height
+            # self._text_surface = pygame.transform.scale(self._text_surface, (self._width+4, self._height+4))
+            
+            self._text_surface = pygame.Surface((math.floor(self._scale_factor * (self._width + 4)), math.floor(self._scale_factor * (self._height + 4))))
+            
+        pygame.draw.rect(
+            self._text_surface, 
+            (0,0,0), 
+            (
+                math.floor(self._scale_factor * self._x), 
+                math.floor(self._scale_factor * self._y), 
+                math.floor(self._scale_factor * (self._width)), 
+                math.floor(self._scale_factor * (self._height)),
+            )
+        )
+        pygame.draw.rect(
+            self._text_surface, 
+            (170,170,170), 
+            (
+                math.floor(self._scale_factor * 2), 
+                math.floor(self._scale_factor * 2), 
+                math.floor(self._scale_factor * self._width), 
+                math.floor(self._scale_factor * self._height),
+            )
+        )
+        pygame.draw.rect(
+            self._text_surface, 
+            (15, 48, 75), 
+            (
+                0, 
+                0, 
+                math.floor(self._scale_factor * (self._width + 4)), 
+                math.floor(self._scale_factor * 32)
+            )
+        )
         
         self._text_surface.blit(self._font.render(self._name, True, 'white'), (230, 7))
         
-        text_list: list[pygame.font.Font.render] = []
-       
-        colour_text_list = []
-        match_index_list: list[tuple] = []
-        colour_text_lines_list  = []
-        for line in self._text_lines:
-            #functions
-            match_object_list = re.finditer(self._function_regex, line.split('#')[0])
-            match_index_list = []
-            for match_object in match_object_list:
-                match_index_list.append(match_object.span())
-            
-            for span in match_index_list:
-                colour_text_list.append((
-                        self._font.render(line[span[0]:span[1]], True, (15, 48, 75)),
-                        span[0], span[1]
-                    )
-                )
-            
-            #numbers
-            match_object_list = re.finditer(self._number_regex, line.split('#')[0])
-            match_index_list = []
-            for match_object in match_object_list:
-                match_index_list.append(match_object.span())
-            
-            for span in match_index_list:
-                colour_text_list.append((
-                        self._font.render(line[span[0]:span[1]], True, (255, 255, 204)),
-                        span[0], span[1]
-                        )
-                    )
-
-            #Opperators
-            match_object_list = re.finditer(self._operator_regex, line.split('#')[0])
-            match_index_list = []
-            for match_object in match_object_list:
-                match_index_list.append(match_object.span())
-            
-            for span in match_index_list:
-                colour_text_list.append((
-                        self._font.render(line[span[0]:span[1]], True, (255, 255, 255)),
-                        span[0], span[1]
-                        )
-                    )
-            
-             #coments
-            match_object_list = re.finditer(self._coment_regex, line)
-            match_index_list = []
-            for match_object in match_object_list:
-                match_index_list.append(match_object.span())
-            
-            for span in match_index_list:
-                colour_text_list.append((
-                        self._font.render(line[span[0]:span[1]], True, (0, 153, 51)),
-                        span[0], span[1]
+        # ---------------------------------------------------
+        
+        if self._text_list != self._text_list_old:
+        
+            text_list: list[pygame.font.Font.render] = []
+        
+            colour_text_list = []
+            match_index_list: list[tuple] = []
+            self._colour_text_lines_list  = []
+            for line in self._text_lines:
+                #functions
+                match_object_list = re.finditer(self._function_regex, line.split('#')[0])
+                match_index_list = []
+                for match_object in match_object_list:
+                    match_index_list.append(match_object.span())
+                
+                for span in match_index_list:
+                    colour_text_list.append((
+                            self._font.render(line[span[0]:span[1]], True, (15, 48, 75)),
+                            span[0], span[1]
                         )
                     )
                 
-            colour_text_lines_list.append(colour_text_list)
-            colour_text_list = []
+                #numbers
+                match_object_list = re.finditer(self._number_regex, line.split('#')[0])
+                match_index_list = []
+                for match_object in match_object_list:
+                    match_index_list.append(match_object.span())
+                
+                for span in match_index_list:
+                    colour_text_list.append((
+                            self._font.render(line[span[0]:span[1]], True, (255, 255, 204)),
+                            span[0], span[1]
+                            )
+                        )
+
+                #Opperators
+                match_object_list = re.finditer(self._operator_regex, line.split('#')[0])
+                match_index_list = []
+                for match_object in match_object_list:
+                    match_index_list.append(match_object.span())
+                
+                for span in match_index_list:
+                    colour_text_list.append((
+                            self._font.render(line[span[0]:span[1]], True, (255, 255, 255)),
+                            span[0], span[1]
+                            )
+                        )
+                
+                #coments
+                match_object_list = re.finditer(self._coment_regex, line)
+                match_index_list = []
+                for match_object in match_object_list:
+                    match_index_list.append(match_object.span())
+                
+                for span in match_index_list:
+                    colour_text_list.append((
+                            self._font.render(line[span[0]:span[1]], True, (0, 153, 51)),
+                            span[0], span[1]
+                            )
+                        )
+                    
+                self._colour_text_lines_list.append(colour_text_list)
+                colour_text_list = []
+            
+            self._text_lines_list: list[pygame.font.Font.render] = [self._font.render(text, True, (0, 0, 0)) for i, text in enumerate(self._text_lines)]
+            
+            self._line_numbers = [self._font.render(str(i), True, (217, 217, 217)) for i in range(len(self._text_lines))]
+            
+            self._text_list_old = self._text_list.copy()
         
-        text_list: list[pygame.font.Font.render] = [self._font.render(text, True, (0, 0, 0)) for i, text in enumerate(self._text_lines)]
+        # ---------------------------------------------------------------
         
-        line_numbers = [self._font.render(str(i), True, (217, 217, 217)) for i in range(len(self._text_lines))]
+        for i, text in enumerate(self._text_lines_list):
+            self._text_surface.blit(
+                text, 
+                (
+                    math.floor(self._scale_factor * 42), 
+                    i * self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                )
+            )
         
-        for i, text in enumerate(text_list):
-            self._text_surface.blit(text, (42, i*20 + 40))
-        
-        for i, text_list in enumerate(colour_text_lines_list):
+        for i, text_list in enumerate(self._colour_text_lines_list):
             for text in text_list:
-                self._text_surface.blit(text[0], (42 + text[1] * 11, (i )*20 + 40))
+                self._text_surface.blit(
+                    text[0], 
+                    (
+                        math.floor(self._scale_factor * 42) + text[1] *  self._font.size(' ')[0], 
+                        i * self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                    )
+                    )
         
-        for i, number in enumerate(line_numbers):
-            self._text_surface.blit(number, (3, i*20 + 40))
+        for i, number in enumerate(self._line_numbers):
+            self._text_surface.blit(
+                number, 
+                (
+                    math.floor(self._scale_factor * 3), 
+                    i * self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                )
+            )
             
         self._button_play.draw(self._text_surface)
         self._button_save.draw(self._text_surface)
@@ -381,17 +423,56 @@ class File_wiewer:
         # raise KeyboardInterrupt
     
     def scale(self, scale_factor):
-        pass
+        self._scale_factor = scale_factor
+        
+        self._x = math.floor(self._scale_factor * 100)
+        self._y = math.floor(self._scale_factor * 100)
+        self._coordinate = (self._x, self._y)
+        
+        self._text_list_old = None
+        
+        self._button_play = \
+            interfacec.Button(
+                0,
+                0,
+                math.floor(self._scale_factor * 35),
+                math.floor(self._scale_factor * 32),
+                "play",
+                math.floor(self._scale_factor * 9),
+                lambda: self.run_code(), 
+            )
+        
+        self._button_save = \
+            interfacec.Button(
+                math.floor(self._scale_factor * 35),
+                0,
+                math.floor(self._scale_factor * 35),
+                math.floor(self._scale_factor * 32),
+                "save",
+                math.floor(self._scale_factor * 9),
+                lambda: self.save(), 
+            )
+        
+        self._button_stop = \
+            interfacec.Button(
+                math.floor(self._scale_factor * 35) * 2,
+                0,
+                math.floor(self._scale_factor * 35),
+                math.floor(self._scale_factor * 32),
+                'stop',
+                math.floor(self._scale_factor * 9),
+                lambda: self.stop(),
+            )
                
     def test_file_select(self, coordinate):
-        if self._x < coordinate[0] < self._x + self._width and self._y < coordinate[1] < self._y + self._height:
+        if self._x < coordinate[0] < self._x + math.floor(self._scale_factor * (self._width + 4)) and self._y < coordinate[1] < self._y + math.floor(self._scale_factor * (self._height + 4)):
             self.selected = True
             pygame.event.post(pygame.event.Event(self._custom_event_dict['TEXT_MODE']))
             self._button_play.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             self._button_save.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             self._button_stop.test_button_press((coordinate[0]-self._x, coordinate[1]-self._y))
             
-            if self._y < coordinate[1] < self._y + 32: # top bar for mooving the window
+            if self._y < coordinate[1] < self._y + math.floor(self._scale_factor * 32): # top bar for mooving the window
                 self.movable = True
             else:
                 self.movable = False
@@ -399,11 +480,11 @@ class File_wiewer:
                 relative_x = coordinate[0] - self._x
                 relative_y = coordinate[1] - self._y
                 
-                self._cursor_line = (relative_y-40)//20
+                self._cursor_line = (relative_y-math.floor(self._scale_factor * 40))//self._font.size(' ')[1]
                 if self._cursor_line > len(self._text_lines):
                     self._cursor_line = len(self._text_lines)
                 
-                self._cursor_index = (relative_x-35)//11
+                self._cursor_index = (relative_x-math.floor(self._scale_factor * 35))//self._font.size(' ')[0]
                 if self._cursor_index > len(self._text_lines[self._cursor_line]):
                     self._cursor_index = len(self._text_lines[self._cursor_line])
                 
@@ -557,7 +638,13 @@ class File_wiewer:
         
     def _draw_cursor(self):
         if self._draw_cursor_counter < 40:
-            self._text_surface.blit(self._cursor, (self._cursor_index * 11 + 35, self._cursor_line*20 + 40))
+            self._text_surface.blit(
+                self._cursor, 
+                (
+                    self._cursor_index *  self._font.size(' ')[0] + math.floor(self._scale_factor * 35), 
+                    self._cursor_line * self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                )
+            )
             self._draw_cursor_counter += 1
         else:
             self._draw_cursor_counter += 1
