@@ -1131,8 +1131,7 @@ class Code_prosessor(multiprocessing.Process):
         '''
         path = Path(__file__).parent/ Path('sounds') / Path(sound_file)
         self._custom_event_queue.put((self._name, 'sound', (path, volume)))
-        
-                            
+                                
 class Add__str__func:
     def __init__(self, func):
         self.func = func
