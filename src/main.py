@@ -140,11 +140,14 @@ class Main:
         )
 
         self._menue_controller = menues.Menue_controller(self._screen, self._scale_factor, self._custom_event_dict)
+  
+    def NOT_IN_EVENT_HASH_MAP(selef, event: pygame.event.Event):
+        print(f'event not in event_hash_map: {event}')
         
-    def QUIT(self, event):
+    def QUIT(self, event: pygame.event.Event):
         self._running = False 
     
-    def MOUSEBUTTONDOWN(self, event):
+    def MOUSEBUTTONDOWN(self, event: pygame.event.Event):
         print('test')
         mouse = pygame.mouse.get_pos()
         self._menue_controller.on_mouse_press(mouse)
@@ -153,22 +156,22 @@ class Main:
         
         self._game.send_mouse_pos_to_file(pygame.mouse.get_pos())
 
-    def PLAY(self, event):
+    def PLAY(self, event: pygame.event.Event):
         self._menue_controller.set_menue('game')
         self._display_game = True
         self._game.resume()
     
-    def TEXT_MODE(self, event):
+    def TEXT_MODE(self, event: pygame.event.Event):
         self._game_mode = 'TEXT_MODE'
     
-    def GAME_MODE(self, event):
+    def GAME_MODE(self, event: pygame.event.Event):
         self._game_mode = 'GAME_MODE'
     
-    def LOAD_MENUE(self, event):
+    def LOAD_MENUE(self, event: pygame.event.Event):
         self._game_mode = 'LOAD_MENUE'
         self._menue_controller.set_menue('load_menue')
     
-    def KEYDOWN(self, event):
+    def KEYDOWN(self, event: pygame.event.Event):
         if event.key == pygame.K_F11:
             pygame.display.toggle_fullscreen() 
         elif event.key == pygame.K_ESCAPE:
@@ -182,30 +185,25 @@ class Main:
                 else:
                     self._menue_controller.text += event.unicode
         elif self._game_mode == 'TEXT_MODE':
-            if event.unicode == '':
-                self._game.send_key_to_file_wiewer(event)
-            else:
-                print(repr(event.unicode))
-                self._game.eddit_file(event.unicode)
+            self._game.send_key_to_file_wiewer(event)
         else:
             self._game.add_keystroke_to_queue(event.unicode)
     
-    def VIDEORESIZE(self, event):
+    def VIDEORESIZE(self, event: pygame.event.Event):
         self._size = width, height = event.w, event.h
         self._scale_factor = min(width, height)/480
         self._fps_displayer.scale(math.floor(self._scale_factor * 8))
         self._menue_controller.scale(self._scale_factor)
         self._game.scale(self._scale_factor)
         
-    def SPARE(self, event):
-        pass
+    def SPARE(self, event: pygame.event.Event):
+        print(f'event function not defined: {event}')
     
     def main_loop(self):
         try:
             while self._running:
                 
                 for event in pygame.event.get():
-                    print(event.type)
                     self._event_hash_map[event.type](event)
                         
                 self._game.move_file_wiewer(pygame.mouse.get_rel())
@@ -215,7 +213,6 @@ class Main:
                 self._menue_controller.draw()
                 
                 if self._display_game:
-                    #player.draw(screen)
                     self._game.draw()
                 
                 if self._game_mode == 'LOAD_MENUE':
@@ -229,7 +226,7 @@ class Main:
                     self._fps_displayer.draw(self._screen)
                 pygame.display.flip()
                 # currentley the limmiting factor for the annimation speed is the clock function integrated in the Code_prosessor class in game.py
-                self._clock.tick(80)  # limits FPS to 1000
+                self._clock.tick(80)  # limits FPS to 80
                 
                 
                 

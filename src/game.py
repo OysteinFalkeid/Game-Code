@@ -122,12 +122,6 @@ class Game:
             self._multiprocessing_draw_queue, 
             self._custom_event_queue
         )
-    
-    def eddit_file(self, keystroke: str):   
-        for file in self._file_dict.values():
-            if file.selected:
-                file.text_edditer(keystroke)
-                break
             
     def add_keystroke_to_queue(self, keystroke):
         for file in self._file_dict.values():
@@ -136,7 +130,7 @@ class Game:
     def send_key_to_file_wiewer(self, event):
         for file in self._file_dict.values():
             if file.selected:
-                file.move_cursor(event)
+                file.text_edditer(event)
     
     def send_mouse_pos_to_file(self, coordinates):
         # print(coordinates)
@@ -540,14 +534,13 @@ class File_wiewer:
         if pygame.mouse.get_pressed(3)[0]:
             self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
             
-    def text_edditer(self, keystroke: str):
+    def text_edditer(self, event: pygame.event.Event):
+        print(event.key)
         # Gets keystroces as unicode character and inserts these in the string representation of the file
         # both the index of the string and the position of the cursor is changed
         
         #some keyes do not have a asci representation and to remove buggs this if statement i pased
-        if keystroke == '':
-            pass
-        elif keystroke == '\x08': # backspace
+        if event.key == pygame.K_BACKSPACE:
             # if the cursor is not at index 0 the function can delete items without causing out of 
             # bound error
             if self._text_list_index:
@@ -565,27 +558,25 @@ class File_wiewer:
                     #the self._text_lines list has not been updated meaning we can use the lengt to 
                     # determine the corect position of the cursor after deleting a newline character
                     self._cursor_index = len(self._text_lines[self._cursor_line])
-        elif keystroke == '\x7f': # delete
+                    
+        elif event.key == pygame.K_DELETE:
             if self._text_list_index < len(self._text_list):
-                self._text_list.pop(self._text_list_index)    
-        elif keystroke == '\r': # enter
+                self._text_list.pop(self._text_list_index)   
+                 
+        elif event.key == 13: # enter
             self._text_list.insert(self._text_list_index, '\n')
             self._text_list_index += 1
             # the cursor has to be moved down one line and back to index 0
             self._cursor_index = 0
             self._cursor_line += 1
-        elif keystroke == '\t': # tab
+            
+        elif event.key == pygame.K_TAB: # tab
             for _ in range(4):
                 self._text_list.insert(self._text_list_index, ' ')
                 self._text_list_index += 1
                 self._cursor_index += 1
-        else:
-            self._text_list.insert(self._text_list_index, keystroke)
-            self._text_list_index += 1
-            self._cursor_index += 1 
-    
-    def move_cursor(self, event):
-        if event.key == pygame.K_UP:
+                
+        elif event.key == pygame.K_UP:
             if self._cursor_line:
                 self._cursor_line -= 1
                 if self._cursor_index < len(self._text_lines[self._cursor_line]):
@@ -635,6 +626,11 @@ class File_wiewer:
             print('end')
             self._text_list_index += len(self._text_lines[self._cursor_line]) - self._cursor_index
             self._cursor_index = len(self._text_lines[self._cursor_line])
+        else:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+    
         
     def _draw_cursor(self):
         if self._draw_cursor_counter < 40:
@@ -1142,4 +1138,4 @@ class Add__str__func:
 
     def __repr__(self):
         return self.__doc__
-            
+    
