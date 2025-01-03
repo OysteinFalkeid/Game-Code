@@ -21,11 +21,13 @@ class Main:
         # pygame setup
         pygame.init()
         pygame.mixer.init()
+        pygame.key.set_repeat(500, 50)
         
         print('\n')
         self._clock = pygame.time.Clock()
         #defines if the game is running or not. when set to 0 or False the game closes
         self._running = True
+        self.mousebuttondown = False
 
         #the size of the screen, width and hight can be used insted off caling get_screen_width() ...
         self._size = pygame.display.get_desktop_sizes()[0]
@@ -59,7 +61,7 @@ class Main:
             pygame.KEYDOWN:         self.KEYDOWN,
             pygame.KEYUP:           self.SPARE,
             pygame.MOUSEMOTION:     self.SPARE,
-            pygame.MOUSEBUTTONUP:   self.SPARE,
+            pygame.MOUSEBUTTONUP:   self.MOUSEBUTTONUP,
             pygame.MOUSEBUTTONDOWN: self.MOUSEBUTTONDOWN,
             pygame.JOYAXISMOTION:   self.SPARE,
             pygame.JOYBALLMOTION:   self.SPARE,
@@ -142,20 +144,29 @@ class Main:
         self._menue_controller = menues.Menue_controller(self._screen, self._scale_factor, self._custom_event_dict)
   
     def NOT_IN_EVENT_HASH_MAP(selef, event: pygame.event.Event):
-        print(f'event not in event_hash_map: {event}')
+        pass
+        # print(f'event not in event_hash_map: {event}')
         
     def QUIT(self, event: pygame.event.Event):
         self._running = False 
     
     def MOUSEBUTTONDOWN(self, event: pygame.event.Event):
-        print('test')
         mouse = pygame.mouse.get_pos()
         self._menue_controller.on_mouse_press(mouse)
         if self._display_game:
             self._game.on_mouse_press(mouse)
         
         self._game.send_mouse_pos_to_file(pygame.mouse.get_pos())
+        
+        self.mousebuttondown = True
 
+    def MOUSEBUTTONUP(self, event: pygame.event.Event):
+        mouse = pygame.mouse.get_pos()
+        if self._display_game:
+            self._game.on_mouse_press(mouse, release=True)
+            
+        self.mousebuttondown = False
+    
     def PLAY(self, event: pygame.event.Event):
         self._menue_controller.set_menue('game')
         self._display_game = True
@@ -197,16 +208,19 @@ class Main:
         self._game.scale(self._scale_factor)
         
     def SPARE(self, event: pygame.event.Event):
-        print(f'event function not defined: {event}')
+        pass
+        # print(f'event function not defined: {event}')
     
     def main_loop(self):
         try:
             while self._running:
                 
                 for event in pygame.event.get():
-                    self._event_hash_map[event.type](event)
+                    self._event_hash_map.get(event.type, self.NOT_IN_EVENT_HASH_MAP)(event)
                         
                 self._game.move_file_wiewer(pygame.mouse.get_rel())
+                if self.mousebuttondown:
+                    self._game.on_mouse_press(pygame.mouse.get_pos(), release=True)
                 
                 self._screen.fill(self._background_base_colour)
                 
@@ -239,7 +253,6 @@ class Main:
             pygame.mixer.quit()
             self._game.kill()
             print('Exit')
-            
             
     def maximize_window(self):
         """

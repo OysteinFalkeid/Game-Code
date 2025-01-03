@@ -12,7 +12,13 @@ import multiprocessing
 import functools
 import random
 import math
+import numpy as np
 import re
+import pyperclip
+
+mod_shift = 1
+mod_ctrl = 64
+mod_alt = 256
 
 
 class Game:
@@ -133,19 +139,22 @@ class Game:
                 file.text_edditer(event)
     
     def send_mouse_pos_to_file(self, coordinates):
-        # print(coordinates)
         for file in self._file_dict.values():
             file.send_event_value(('mouse_coords', coordinates))
     
-    def on_mouse_press(self, coordinate):
-        for button in self._button_list:
-            button.test_button_press(coordinate)
-            
-        for key in reversed(self._file_dict):
-            # print(key)
-            if self._file_dict[key].test_file_select(coordinate):
-                self._file_dict[key] = self._file_dict.pop(key)
-                break
+    def on_mouse_press(self, coordinate, release = False):
+        if release:
+            for file in self._file_dict.values():
+                if file.selected:
+                    file.moause_button_up(coordinate)
+        else:
+            for button in self._button_list:
+                button.test_button_press(coordinate)
+                
+            for key in reversed(self._file_dict):
+                if self._file_dict[key].test_file_select(coordinate):
+                    self._file_dict[key] = self._file_dict.pop(key)
+                    break
         
     def move_file_wiewer(self, rel_coordinate):
         for file in self._file_dict.values():
@@ -238,11 +247,36 @@ class File_wiewer:
         
         self._coment_regex = re.compile(r'#.*')
         
-        self.scale(self._scale_factor)
         self._cursor_index = 0
         self._cursor_line = 0
         self._text_list_index = 0
+        self._text_select_start = 0
+        self._text_select_end = 0
+        self._text_select_line_start = 0
+        self._text_select_line_end = 0
         self._draw_cursor_counter = 0
+
+        self._keyboard_event_hashmap = \
+            {
+                pygame.K_BACKSPACE: self.K_BACKSPACE,
+                pygame.K_DELETE: self.K_DELETE,
+                pygame.K_RETURN: self.K_ENTER,
+                pygame.K_TAB: self.K_TAB,
+                pygame.K_LEFT: self.K_LEFT,
+                pygame.K_RIGHT: self.K_RIGHT,
+                pygame.K_UP: self.K_UP,
+                pygame.K_DOWN: self.K_DOWN,
+                pygame.K_HOME: self.K_HOME,
+                pygame.K_END: self.K_END,
+                pygame.K_c: self.K_c,
+                pygame.K_v: self.K_v,
+                pygame.K_x: self.K_x,
+                pygame.K_z: self.K_z,
+                # pygame.K_ESCAPE: self.K_ESCAPE,
+                # pygame.K_BACKQUOTE: self.K_BACKQUOTE,
+            }
+        
+        self.scale(self._scale_factor)
         
     def draw(self, surface: pygame.Surface):
         
@@ -413,9 +447,70 @@ class File_wiewer:
         self._button_save.draw(self._text_surface)
         self._button_stop.draw(self._text_surface)
         self._draw_cursor()
+        
+        
+        self.invert()
+        
         surface.blit(self._text_surface, self._coordinate)
-        # raise KeyboardInterrupt
-    
+        
+    def invert(self):
+        
+        if self._text_select_start - self._text_select_end < 0:
+            start = self._text_select_start
+            end = self._text_select_end
+        else:
+            start = self._text_select_end
+            end = self._text_select_start
+        
+        length = 0
+        if self._text_select_line_start:
+            for line in self._text_lines[0:self._text_select_line_start]:
+                length += len(line) + 1 # +1 to compensate for missing '\n' on new lines
+        
+        start = (start - length) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+        
+        if self._text_select_line_end:
+            for line in self._text_lines[self._text_select_line_start:self._text_select_line_end]:
+                length += len(line) + 1 # +1 to compensate for missing '\n' on new lines
+            
+        end = (end - length) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+            
+        if self._text_select_line_start == self._text_select_line_end:
+            
+            top = self._text_select_line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (self._text_select_line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            
+            array = pygame.surfarray.pixels3d(self._text_surface)
+            sub_array = array[start:end, top:bottom]
+            sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
+        
+        else:
+            
+            array = pygame.surfarray.pixels3d(self._text_surface)
+            
+            line_start = math.floor(self._scale_factor * 42)
+            line_end = len(self._text_lines[self._text_select_line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+            top = self._text_select_line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (self._text_select_line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            
+            sub_array = array[start:line_end, top:bottom]
+            sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
+            
+            
+            for line in range(1, self._text_select_line_end - self._text_select_line_start):
+                line_end = len(self._text_lines[line + self._text_select_line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+                top = (line + self._text_select_line_start) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                bottom = (line + self._text_select_line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+                
+                sub_array = array[line_start:line_end, top:bottom]
+                sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
+                
+            top = (self._text_select_line_end) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (self._text_select_line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            
+            sub_array = array[line_start:end, top:bottom]
+            sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
+         
     def scale(self, scale_factor):
         self._scale_factor = scale_factor
         
@@ -489,6 +584,11 @@ class File_wiewer:
                         index += len(line) + 1
                 self._text_list_index = index + self._cursor_index
                 
+                self._text_select_start = self._text_list_index
+                self._text_select_end = self._text_list_index
+                self._text_select_line_start = self._cursor_line
+                self._text_select_line_end = self._cursor_line
+                
             return True
         else:
             if self.selected:
@@ -496,7 +596,29 @@ class File_wiewer:
                 pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
                 self.movable = False
             return False
+    
+    def moause_button_up(self, coordinate):
+        relative_x = coordinate[0] - self._x
+        relative_y = coordinate[1] - self._y
         
+        self._cursor_line = (relative_y-math.floor(self._scale_factor * 40))//self._font.size(' ')[1]
+        if self._cursor_line > len(self._text_lines):
+            self._cursor_line = len(self._text_lines)
+        
+        self._cursor_index = (relative_x-math.floor(self._scale_factor * 35))//self._font.size(' ')[0]
+        if self._cursor_index > len(self._text_lines[self._cursor_line]):
+            self._cursor_index = len(self._text_lines[self._cursor_line])
+        
+        index = 0 
+        for i, line in enumerate(self._text_lines):
+                if i+1 > self._cursor_line:
+                    break
+                index += len(line) + 1
+        self._text_list_index = index + self._cursor_index
+        
+        self._text_select_end = self._text_list_index
+        self._text_select_line_end = self._cursor_line
+    
     def run_code(self):
         self.selected = False
         pygame.event.post(pygame.event.Event(self._custom_event_dict['GAME_MODE']))
@@ -535,109 +657,228 @@ class File_wiewer:
             self._x, self._y = self._coordinate = rel_coordinate[0] + self._coordinate[0], rel_coordinate[1] + self._coordinate[1]
             
     def text_edditer(self, event: pygame.event.Event):
-        print(event.key)
-        # Gets keystroces as unicode character and inserts these in the string representation of the file
-        # both the index of the string and the position of the cursor is changed
-        
-        #some keyes do not have a asci representation and to remove buggs this if statement i pased
-        if event.key == pygame.K_BACKSPACE:
-            # if the cursor is not at index 0 the function can delete items without causing out of 
-            # bound error
-            if self._text_list_index:
-                #to destinguish between newline character and text we simpely test if the backspase 
-                # is at the index 0 of a line
-                #this is possible because the newline character is at the end of the previus line
-                if self._cursor_index > 0:
-                    self._text_list.pop(self._text_list_index -1)
-                    self._text_list_index -= 1
-                    self._cursor_index -= 1
-                else: 
-                    self._text_list.pop(self._text_list_index -1)
-                    self._text_list_index -= 1
-                    self._cursor_line -= 1
-                    #the self._text_lines list has not been updated meaning we can use the lengt to 
-                    # determine the corect position of the cursor after deleting a newline character
-                    self._cursor_index = len(self._text_lines[self._cursor_line])
-                    
-        elif event.key == pygame.K_DELETE:
-            if self._text_list_index < len(self._text_list):
-                self._text_list.pop(self._text_list_index)   
-                 
-        elif event.key == 13: # enter
-            self._text_list.insert(self._text_list_index, '\n')
-            self._text_list_index += 1
-            # the cursor has to be moved down one line and back to index 0
-            self._cursor_index = 0
-            self._cursor_line += 1
+        self._keyboard_event_hashmap.get(event.key, self.K_TEXT)(event)
+    #region Keypress event handelers
+    def K_BACKSPACE(self, event: pygame.event.Event):
+        # if the cursor is not at index 0 the function can delete items without causing out of 
+        # bound error
+        if self._text_select_start != self._text_select_end:
+            self._text_list[self._text_select_start:self._text_select_end] = []
             
-        elif event.key == pygame.K_TAB: # tab
-            for _ in range(4):
-                self._text_list.insert(self._text_list_index, ' ')
-                self._text_list_index += 1
-                self._cursor_index += 1
-                
-        elif event.key == pygame.K_UP:
-            if self._cursor_line:
+            self._text_list_index = self._text_select_start
+            self._cursor_index = self._text_select_start
+            self._cursor_line = self._text_select_line_start
+            
+        elif self._text_list_index:
+            #to destinguish between newline character and text we simpely test if the backspase 
+            # is at the index 0 of a line
+            #this is possible because the newline character is at the end of the previus line
+            if self._cursor_index > 0:
+                self._text_list.pop(self._text_list_index -1)
+                self._text_list_index -= 1
+                self._cursor_index -= 1
+            else: 
+                self._text_list.pop(self._text_list_index -1)
+                self._text_list_index -= 1
                 self._cursor_line -= 1
-                if self._cursor_index < len(self._text_lines[self._cursor_line]):
-                    self._text_list_index -= len(self._text_lines[self._cursor_line]) + 1
-                else:
-                    self._text_list_index -= self._cursor_index + 1
-                if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
-                    self._cursor_index = len(self._text_lines[self._cursor_line])
-                
-        elif event.key == pygame.K_RIGHT:
-            if len(self._text_lines[self._cursor_line]) < self._cursor_index:
+                #the self._text_lines list has not been updated meaning we can use the lengt to 
+                # determine the corect position of the cursor after deleting a newline character
                 self._cursor_index = len(self._text_lines[self._cursor_line])
-            elif len(self._text_lines[self._cursor_line]) == self._cursor_index:
-                if self._text_list_index < len(self._text_list):
+                
+        self.update_text_selecter(event.mod)
+    
+    def K_DELETE(self, event: pygame.event.Event): 
+        if self._text_select_start != self._text_select_end:
+            self._text_list[self._text_select_start:self._text_select_end] = []
+            
+            self._text_list_index = self._text_select_start
+            self._cursor_index = self._text_select_end
+            self._cursor_line = self._text_select_line_start  
+            
+        elif self._text_list_index < len(self._text_list):
+            self._text_list.pop(self._text_list_index)
+            
+        self.update_text_selecter(event.mod)
+    
+    def K_ENTER(self, event: pygame.event.Event):  
+        if self._text_select_start != self._text_select_end:
+            self._text_list[self._text_select_start:self._text_select_end] = []
+            
+            self._text_list_index = self._text_select_start
+            self._cursor_index = self._text_select_start
+            self._cursor_line = self._text_select_line_start
+            
+        self._text_list.insert(self._text_list_index, '\n')
+        self._text_list_index += 1
+        # the cursor has to be moved down one line and back to index 0
+        self._cursor_index = 0
+        self._cursor_line += 1
+        self.update_text_selecter(event.mod)
+        
+    def K_TAB(self, event: pygame.event.Event): 
+        for _ in range(4):
+            self._text_list.insert(self._text_list_index, ' ')
+            self._text_list_index += 1
+            self._cursor_index += 1
+        self.update_text_selecter(event.mod)
+    
+    def K_UP(self, event: pygame.event.Event):
+        if self._cursor_line:
+            self._cursor_line -= 1
+            if self._cursor_index < len(self._text_lines[self._cursor_line]):
+                self._text_list_index -= len(self._text_lines[self._cursor_line]) + 1
+            else:
+                self._text_list_index -= self._cursor_index + 1
+            if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+                self._cursor_index = len(self._text_lines[self._cursor_line])
+        
+        self.update_text_selecter(event.mod)
+    
+    def K_RIGHT(self, event: pygame.event.Event):
+        if len(self._text_lines[self._cursor_line]) < self._cursor_index:
+            self._cursor_index = len(self._text_lines[self._cursor_line])
+        elif len(self._text_lines[self._cursor_line]) == self._cursor_index:
+            if self._text_list_index < len(self._text_list):
+                self._cursor_index = 0
+                self._cursor_line += 1
+                self._text_list_index += 1
+        else:
+            self._cursor_index += 1 
+            self._text_list_index += 1
+        
+        self.update_text_selecter(event.mod)
+        
+    def K_DOWN(self, event: pygame.event.Event):
+        if self._cursor_line < len(self._text_lines) -1:
+            self._text_list_index += len(self._text_lines[self._cursor_line]) + 1
+            self._cursor_line += 1
+            if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
+                self._text_list_index -= self._cursor_index - len(self._text_lines[self._cursor_line])
+                self._cursor_index = len(self._text_lines[self._cursor_line])
+        
+        self.update_text_selecter(event.mod)
+        
+    def K_LEFT(self, event: pygame.event.Event):
+        if self._cursor_index > 0:
+            self._cursor_index -= 1
+            if self._text_list_index > 0:
+                self._text_list_index -= 1
+        else:
+            if self._cursor_line != 0:
+                self._cursor_line -= 1
+                self._cursor_index = len(self._text_lines[self._cursor_line])
+                self._text_list_index -= 1
+        
+        self.update_text_selecter(event.mod)
+        
+    def K_HOME(self, event: pygame.event.Event):
+        self._text_list_index -= self._cursor_index
+        self._cursor_index = 0
+        self._text_list_index = 0
+        self.update_text_selecter(event.mod)
+        
+    def K_END(self, event: pygame.event.Event):
+        self._text_list_index += len(self._text_lines[self._cursor_line]) - self._cursor_index
+        self._cursor_index = len(self._text_lines[self._cursor_line])
+        self.update_text_selecter(event.mod)
+            
+    def K_c(self, event: pygame.event.Event):
+        if (event.mod & mod_ctrl):
+            string = ''.join(self._text_list[self._text_select_start:self._text_select_end])
+            pyperclip.copy(string)
+        else:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+        self.update_text_selecter(event.mod)
+    
+    def K_v(self, event: pygame.event.Event):
+        if (event.mod & mod_ctrl):
+            string = list(pyperclip.paste())
+            for char in string:
+                if char == '\n':
+                    self._text_list.insert(self._text_list_index, char)
+                    self._text_list_index += 1
                     self._cursor_index = 0
                     self._cursor_line += 1
+                else:
+                    self._text_list.insert(self._text_list_index, char)
                     self._text_list_index += 1
-            else:
-                self._cursor_index += 1 
-                self._text_list_index += 1
-                
-        elif event.key == pygame.K_DOWN:
-            if self._cursor_line < len(self._text_lines) -1:
-                self._text_list_index += len(self._text_lines[self._cursor_line]) + 1
-                self._cursor_line += 1
-                if len(self._text_lines[self._cursor_line]) <= self._cursor_index:
-                    self._text_list_index -= self._cursor_index - len(self._text_lines[self._cursor_line])
-                    self._cursor_index = len(self._text_lines[self._cursor_line])
+                    self._cursor_index += 1 
+        else:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+        self.update_text_selecter(event.mod)
+    
+    def K_x(self, event: pygame.event.Event):
+        if (event.mod & mod_ctrl):
+            string = ''.join(self._text_list[self._text_select_start:self._text_select_end])
+            pyperclip.copy(string)
             
-        elif event.key == pygame.K_LEFT:
-            if self._cursor_index > 0:
-                self._cursor_index -= 1
-                if self._text_list_index > 0:
-                    self._text_list_index -= 1
-            else:
-                if self._cursor_line != 0:
-                    self._cursor_line -= 1
-                    self._cursor_index = len(self._text_lines[self._cursor_line])
-                    self._text_list_index -= 1
+            self._text_list[self._text_select_start:self._text_select_end] = []
+            
+            self._text_list_index = self._text_select_start
+            self._cursor_index = self._text_select_start
+            self._cursor_line = self._text_select_line_start 
+             
+        else:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
         
-        elif event.key == pygame.K_HOME:
-            self._text_list_index -= self._cursor_index
-            self._cursor_index = 0
-            self._text_list_index = 0
+        self.update_text_selecter(event.mod)
             
-        elif event.key == pygame.K_END:
-            print('end')
-            self._text_list_index += len(self._text_lines[self._cursor_line]) - self._cursor_index
-            self._cursor_index = len(self._text_lines[self._cursor_line])
+    def K_z(self, event: pygame.event.Event):
+        if (event.mod & mod_ctrl):
+            pass
+        else:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+            self.update_text_selecter(event.mod)
+            
+    # def K_x(self, event: pygame.event.Event):
+    #     if (event.mod & mod_ctrl):
+    #         pass
+    #     else:
+    #         self._text_list.insert(self._text_list_index, event.unicode)
+    #         self._text_list_index += 1
+    #         self._cursor_index += 1 
+            
+    # def K_x(self, event: pygame.event.Event):
+        if (event.mod & mod_ctrl):
+            pass
         else:
             self._text_list.insert(self._text_list_index, event.unicode)
             self._text_list_index += 1
             self._cursor_index += 1 
     
-        
+    def K_TEXT(self, event: pygame.event.Event):
+        if event.unicode:
+            self._text_list.insert(self._text_list_index, event.unicode)
+            self._text_list_index += 1
+            self._cursor_index += 1 
+            self.update_text_selecter(event.mod)
+    
+    def update_text_selecter(self, mod):
+        if (mod & mod_shift):
+            self._text_select_end = self._text_list_index
+            self._text_select_line_end = self._cursor_line
+        else:     
+            self._text_select_start = self._text_list_index
+            self._text_select_end = self._text_list_index
+            self._text_select_line_start = self._cursor_line
+            self._text_select_line_end = self._cursor_line
+            
+    #endregion
+    
     def _draw_cursor(self):
-        if self._draw_cursor_counter < 40:
+        if self._draw_cursor_counter < 60:
             self._text_surface.blit(
                 self._cursor, 
                 (
-                    self._cursor_index *  self._font.size(' ')[0] + math.floor(self._scale_factor * 35), 
+                    self._cursor_index *  self._font.size(' ')[0] + math.floor(self._scale_factor * 37), 
                     self._cursor_line * self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
                 )
             )
@@ -914,7 +1155,6 @@ class Code_prosessor(multiprocessing.Process):
                 The sprite rotates and moves 100 pixels towards the cursor over 1 second
         '''
         self._handle_event_value()
-        # print(self._mouse_coords)
         relative_x = self._mouse_coords[0] - self._x
         relative_y = self._mouse_coords[1] - self._y
         angle = math.degrees(math.atan2(-relative_y, relative_x))
@@ -1104,7 +1344,6 @@ class Code_prosessor(multiprocessing.Process):
         
     def _handle_event_value(self):
         while not self._event_queue.empty():
-            print('test')
             event, value = self._event_queue.get()
             if event == 'mouse_coords':
                 self._mouse_coords = value
