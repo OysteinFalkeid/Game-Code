@@ -454,61 +454,67 @@ class File_wiewer:
         surface.blit(self._text_surface, self._coordinate)
         
     def invert(self):
-        
+        # convert start and end
         if self._text_select_start - self._text_select_end < 0:
             start = self._text_select_start
             end = self._text_select_end
+            line_start = self._text_select_line_start
+            line_end = self._text_select_line_end
         else:
             start = self._text_select_end
             end = self._text_select_start
+            line_start = self._text_select_line_end
+            line_end = self._text_select_line_start
         
+        # define start and end index relative to text line
         length = 0
-        if self._text_select_line_start:
-            for line in self._text_lines[0:self._text_select_line_start]:
+        if line_start:
+            for line in self._text_lines[0:line_start]:
                 length += len(line) + 1 # +1 to compensate for missing '\n' on new lines
         
         start = (start - length) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
         
-        if self._text_select_line_end:
-            for line in self._text_lines[self._text_select_line_start:self._text_select_line_end]:
+        if line_end:
+            for line in self._text_lines[line_start:line_end]:
                 length += len(line) + 1 # +1 to compensate for missing '\n' on new lines
             
         end = (end - length) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+        
+        #if single line   
+        if line_start == line_end:
             
-        if self._text_select_line_start == self._text_select_line_end:
-            
-            top = self._text_select_line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
-            bottom = (self._text_select_line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            top = line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
             
             array = pygame.surfarray.pixels3d(self._text_surface)
             sub_array = array[start:end, top:bottom]
             sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
-        
+        # else multiline
         else:
             
             array = pygame.surfarray.pixels3d(self._text_surface)
             
-            line_start = math.floor(self._scale_factor * 42)
-            line_end = len(self._text_lines[self._text_select_line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
-            top = self._text_select_line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
-            bottom = (self._text_select_line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            start_line = math.floor(self._scale_factor * 42)
+            end_line = len(self._text_lines[line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+            top = line_start *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
             
-            sub_array = array[start:line_end, top:bottom]
+            sub_array = array[start:end_line, top:bottom]
             sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
             
             
-            for line in range(1, self._text_select_line_end - self._text_select_line_start):
-                line_end = len(self._text_lines[line + self._text_select_line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
-                top = (line + self._text_select_line_start) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
-                bottom = (line + self._text_select_line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            for line in range(1, line_end - line_start):
+                end_line = len(self._text_lines[line + line_start]) *  self._font.size(' ')[0] + math.floor(self._scale_factor * 42)
+                top = (line + line_start) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+                bottom = (line + line_start + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
                 
-                sub_array = array[line_start:line_end, top:bottom]
+                sub_array = array[start_line:end_line, top:bottom]
                 sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
                 
-            top = (self._text_select_line_end) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
-            bottom = (self._text_select_line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
+            top = (line_end) *  self._font.size(' ')[1] + math.floor(self._scale_factor * 40)
+            bottom = (line_end + 1) *  self._font.size(' ')[1] +  + math.floor(self._scale_factor * 40)
             
-            sub_array = array[line_start:end, top:bottom]
+            sub_array = array[start_line:end, top:bottom]
             sub_array[:, :, :] = 255 - sub_array[:, :, :]  # Invert the colors
          
     def scale(self, scale_factor):
@@ -662,12 +668,16 @@ class File_wiewer:
     def K_BACKSPACE(self, event: pygame.event.Event):
         # if the cursor is not at index 0 the function can delete items without causing out of 
         # bound error
-        if self._text_select_start != self._text_select_end:
-            self._text_list[self._text_select_start:self._text_select_end] = []
-            
-            self._text_list_index = self._text_select_start
-            self._cursor_index = self._text_select_start
-            self._cursor_line = self._text_select_line_start
+        text_selected = abs(self._text_select_end - self._text_select_start)
+        if text_selected:
+            if self._text_select_start > self._text_select_end:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_DELETE(event)
+            else:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_BACKSPACE(event)
             
         elif self._text_list_index:
             #to destinguish between newline character and text we simpely test if the backspase 
@@ -688,12 +698,16 @@ class File_wiewer:
         self.update_text_selecter(event.mod)
     
     def K_DELETE(self, event: pygame.event.Event): 
-        if self._text_select_start != self._text_select_end:
-            self._text_list[self._text_select_start:self._text_select_end] = []
-            
-            self._text_list_index = self._text_select_start
-            self._cursor_index = self._text_select_end
-            self._cursor_line = self._text_select_line_start  
+        text_selected = abs(self._text_select_end - self._text_select_start)
+        if text_selected:
+            if self._text_select_start > self._text_select_end:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_DELETE(event)
+            else:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_BACKSPACE(event)  
             
         elif self._text_list_index < len(self._text_list):
             self._text_list.pop(self._text_list_index)
@@ -701,12 +715,16 @@ class File_wiewer:
         self.update_text_selecter(event.mod)
     
     def K_ENTER(self, event: pygame.event.Event):  
-        if self._text_select_start != self._text_select_end:
-            self._text_list[self._text_select_start:self._text_select_end] = []
-            
-            self._text_list_index = self._text_select_start
-            self._cursor_index = self._text_select_start
-            self._cursor_line = self._text_select_line_start
+        text_selected = abs(self._text_select_end - self._text_select_start)
+        if text_selected:
+            if self._text_select_start > self._text_select_end:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_DELETE(event)
+            else:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_BACKSPACE(event)
             
         self._text_list.insert(self._text_list_index, '\n')
         self._text_list_index += 1
@@ -715,7 +733,18 @@ class File_wiewer:
         self._cursor_line += 1
         self.update_text_selecter(event.mod)
         
-    def K_TAB(self, event: pygame.event.Event): 
+    def K_TAB(self, event: pygame.event.Event):
+        text_selected = abs(self._text_select_end - self._text_select_start)
+        if text_selected:
+            if self._text_select_start > self._text_select_end:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_DELETE(event)
+            else:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_BACKSPACE(event)
+                     
         for _ in range(4):
             self._text_list.insert(self._text_list_index, ' ')
             self._text_list_index += 1
@@ -816,11 +845,15 @@ class File_wiewer:
             string = ''.join(self._text_list[self._text_select_start:self._text_select_end])
             pyperclip.copy(string)
             
-            self._text_list[self._text_select_start:self._text_select_end] = []
-            
-            self._text_list_index = self._text_select_start
-            self._cursor_index = self._text_select_start
-            self._cursor_line = self._text_select_line_start 
+            text_selected = abs(self._text_select_end - self._text_select_start)
+            if self._text_select_start > self._text_select_end:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_DELETE(event)
+            else:
+                self._text_select_end = self._text_select_start
+                for _ in range(text_selected):
+                    self.K_BACKSPACE(event) 
              
         else:
             self._text_list.insert(self._text_list_index, event.unicode)
@@ -856,6 +889,16 @@ class File_wiewer:
     
     def K_TEXT(self, event: pygame.event.Event):
         if event.unicode:
+            text_selected = abs(self._text_select_end - self._text_select_start)
+            if text_selected:
+                if self._text_select_start > self._text_select_end:
+                    self._text_select_end = self._text_select_start
+                    for _ in range(text_selected):
+                        self.K_DELETE(event)
+                else:
+                    self._text_select_end = self._text_select_start
+                    for _ in range(text_selected):
+                        self.K_BACKSPACE(event)
             self._text_list.insert(self._text_list_index, event.unicode)
             self._text_list_index += 1
             self._cursor_index += 1 
