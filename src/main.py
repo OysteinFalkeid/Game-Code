@@ -210,6 +210,27 @@ class Main:
     def SPARE(self, event: pygame.event.Event):
         pass
         # print(f'event function not defined: {event}')
+        
+    def maximize_window(self):
+        """
+        Maximize the Pygame window based on the operating system.
+        """
+        hwnd = pygame.display.get_wm_info()["window"]
+        system = platform.system()
+
+        if system == 'Windows':
+            ctypes.windll.user32.ShowWindow(hwnd, 3)  # SW_MAXIMIZE
+        elif system == 'Linux':
+            os.system(f"wmctrl -i -r {hwnd} -b add,maximized_vert,maximized_horz")
+        elif system == 'Darwin':  # macOS
+            os.system(f"""
+            osascript -e 'tell application "System Events" to set the position of windows of application "Python" to {{0, 0}}'
+            osascript -e 'tell application "System Events" to set the size of windows of application "Python" to {{1920, 1080}}'
+            """)
+        else:
+            # Fallback: Simulate maximized window
+            info = pygame.display.Info()
+            pygame.display.set_mode((info.current_w, info.current_h), pygame.RESIZABLE)
     
     def main_loop(self):
         try:
@@ -254,26 +275,6 @@ class Main:
             self._game.kill()
             print('Exit')
             
-    def maximize_window(self):
-        """
-        Maximize the Pygame window based on the operating system.
-        """
-        hwnd = pygame.display.get_wm_info()["window"]
-        system = platform.system()
-
-        if system == 'Windows':
-            ctypes.windll.user32.ShowWindow(hwnd, 3)  # SW_MAXIMIZE
-        elif system == 'Linux':
-            os.system(f"wmctrl -i -r {hwnd} -b add,maximized_vert,maximized_horz")
-        elif system == 'Darwin':  # macOS
-            os.system(f"""
-            osascript -e 'tell application "System Events" to set the position of windows of application "Python" to {{0, 0}}'
-            osascript -e 'tell application "System Events" to set the size of windows of application "Python" to {{1920, 1080}}'
-            """)
-        else:
-            # Fallback: Simulate maximized window
-            info = pygame.display.Info()
-            pygame.display.set_mode((info.current_w, info.current_h), pygame.RESIZABLE)
     
 if __name__ == '__main__':
     multiprocessing.freeze_support()
